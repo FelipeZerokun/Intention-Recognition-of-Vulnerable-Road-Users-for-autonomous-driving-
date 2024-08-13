@@ -1,12 +1,11 @@
 from utils import *
 import cv2
 import os
-
 from pathlib import Path
 
 
 class VideoLabeling:
-    def __init__(self, videos_dir: Path, output_dir: Path):
+    def __init__(self, videos_dir: Path, frames_dir: Path):
         """Class for annotating videos
 
         Args:
@@ -17,8 +16,8 @@ class VideoLabeling:
 
         self.videos_dir = videos_dir
         check_path(folder_path=self.videos_dir, create=False)
-        self.output_dir = output_dir
-        check_path(folder_path=self.output_dir, create=True)
+        self.frames_dir = frames_dir
+        check_path(folder_path=self.frames_dir, create=True)
 
 
     def extract_frames_single(self, frame_rate=5):
@@ -35,7 +34,7 @@ class VideoLabeling:
                 if video.endswith('.avi'):
                     video_name = video.split('.')[0]
                     video_path = Path(test_folder_path, video)
-                    output_frame_path = Path(self.output_dir, test_folder, "frames")
+                    output_frame_path = Path(self.frames_dir, test_folder, "frames")
                     check_path(output_frame_path, create=True)
                     print(f"Extracting frames from video: {video_name} in folder {test_folder}")
                     cap = cv2.VideoCapture(str(video_path))
@@ -50,8 +49,6 @@ class VideoLabeling:
                         success, image = cap.read()
                         count += 1
                     cap.release()
-
-
 
 def main():
     # data_dir = os.environ.get('DATA_DIR')
