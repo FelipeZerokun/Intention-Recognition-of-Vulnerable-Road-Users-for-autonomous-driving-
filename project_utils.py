@@ -20,6 +20,7 @@ def check_path(folder_path, create=False):
 
     else:
         print(f'Path {folder_path} exists.')
+        return True
 
 
 def check_file(path_to_file):
