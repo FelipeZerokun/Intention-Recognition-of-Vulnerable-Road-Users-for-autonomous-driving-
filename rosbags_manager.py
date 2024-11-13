@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import cv2
 import pandas as pd
-from data_extraction import (get_color_image, get_depth_image, get_pointcloud_map ,overlap_depth_map_with_color_image)
+from data_extraction import *
 
 import pyrealsense2 as rs
 
@@ -21,7 +21,7 @@ class RosbagManager():
 
     _depth_scale = 0.001
 
-    _local_pos_topic = '/anavs/solution/pos'
+    _ned_pos_topic = '/anavs/solution/pos'
     _global_pos_topic = '/anavs/solution/pos_llh'
     _ecef_pos_topic = '/anavs/solution/pos_xyz'
     _local_vel_topic = '/anavs/solution/vel'
@@ -29,7 +29,7 @@ class RosbagManager():
 
     _odom_topic = '/RosAria/pose'
 
-    _gnss_topics = [_local_pos_topic,
+    _gnss_topics = [_ned_pos_topic,
                    _global_pos_topic,
                    _ecef_pos_topic,
                    _local_vel_topic,
@@ -37,6 +37,8 @@ class RosbagManager():
                    _odom_topic,]
 
     _stereo_topics = [_stereo_info, _stereo_image, _depth_image, _depth_pointcloud]
+
+    _topics = [_odom_topic, *_stereo_topics, *_gnss_topics]
 
     def __init__(self, path: Path, name: str):
         self.path = path
@@ -61,22 +63,17 @@ class RosbagManager():
             info = self.bag.get_type_and_topic_info()
             topics = info.topics
 
-            info = False
-            topic_count = 1
-
-            # print Topics and metadata
+            print("Info: {}".format(info))
+            print(f"Number of topics: {len(topics)}")
+            print("---------------------------------------------")
 
             for topic, metadata in topics.items():
-                if not info:
-                    print(" ROSBAG METADATA")
-                    print(f"Message type: {metadata.msg_type}")
-                    print(f"Message count: {metadata.message_count}")
-                    print(f"Frequency: {metadata.frequency}")
-                    info = True
-
-                print("----------------------------------------------------------------")
                 print(f"Topic: {topic}")
-                print(f"Metadata: {metadata}")
+                print(f"Message type: {metadata.msg_type}")
+                print(f"Message count: {metadata.message_count}")
+                print(f"Frequency: {metadata.frequency}")
+                print("---------------------------------------------")
+
 
 
         except Exception as e:
@@ -90,11 +87,12 @@ class RosbagManager():
         """
         Extract stereo data from the rosbag.
         """
-        frames_to_skip = 10
+        frames_to_skip = 1
         show_info = True
         depth_map_check = False
         stereo_image_check = False
         pointcloud_check = False
+        odom_check = False
         t_image = 0
         t_depth = 0
         pointcloud = None
@@ -102,7 +100,7 @@ class RosbagManager():
         try:
             self._open_bag()
 
-            for topic, msg, t in self.bag.read_messages(topics=self._stereo_topics):
+            for topic, msg, t in self.bag.read_messages(topics=self._topics):
                 if show_info:
                     if topic == self._stereo_info:
                         frames_to_skip -= 1
@@ -112,36 +110,51 @@ class RosbagManager():
                             image_width = msg.width
                             intrinsic_camera_matrix = np.array(msg.K).reshape(3,3) # 3x3 matrix
                             distortion_parameters = np.array(msg.D)
-                            rectification_matrix = np.array(msg.R).reshape(3,3) # 3x3 matrix
+                            rotation_params = np.array(msg.R).reshape(3,3) # 3x3 matrix
                             projection_matrix = np.array(msg.P).reshape(3,4) # 3x4 matrix
 
                             show_info = False
                 else:
-                    print(f"Extracting topic {topic}")
 
-                    if topic == self._depth_image:
-                        depth_image = get_depth_image(msg, image_height, image_width)
+                    if topic == self._odom_topic:
+                        odometry = get_odometry(msg)
+                        print(f"Odometry: {odometry}")
+                        odom_check = True
+
+                    elif topic == self._ned_pos_topic:
+                        # Extract position
+                        x_pos, y_pos, z_pos = get_NED_position(msg)
+                        print("NED position: ", x_pos, y_pos, z_pos)
+
+                    elif topic == self._global_pos_topic:
+                        # Extract position
+                        lat, long, height = get_llh_position(msg)
+                        print("Global position: ", lat, long, height)
+
+                    elif topic == self._ecef_pos_topic:
+                        # Extract position
+                        ecef_x, ecef_y, ecef_z = get_ECEF_position(msg)
+                        print("ECEF position: ", ecef_x, ecef_y, ecef_z)
+
+                    elif topic == self._depth_image:
+                        depth_image = get_depth_image(msg)
                         t_depth = t.to_nsec()
                         depth_map_check = True
 
                     elif topic == self._stereo_image:
                         # Extract frame
-                        frame = get_color_image(msg, image_height, image_width)
+                        frame = get_color_image(msg)
                         stereo_image_check = True
                         t_image = t.to_nsec()
 
                     elif topic == self._depth_pointcloud:
-                        points = get_pointcloud_map(msg, image_height, image_width)
+                        # points = get_pointcloud_map(msg, image_height, image_width)
                         pointcloud_check = True
 
-
-
-                    if depth_map_check and stereo_image_check and pointcloud_check:
-                        print("Extracted all data")
+                    if depth_map_check and stereo_image_check and odom_check:
                         added_images = overlap_depth_map_with_color_image(frame, depth_image)
-                        cv2.imshow('Stereo image and depth map', added_images)
-                        cv2.waitKey(5000)
-                        depth_map_check = stereo_image_check = False
+
+                        depth_map_check = stereo_image_check = odom_check = False
 
 
         except Exception as e:
@@ -281,7 +294,7 @@ def main():
 
     output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/'
     bag = RosbagManager(rosbag_path, rosbag_name)
-    # bag.check_bag()
+    #bag.check_bag()
     bag.extract_stereo_data()
 
     # bag.extract_frames_with_nav_data(output_path)
