@@ -1,4 +1,5 @@
 import os
+import cv2
 
 def check_path(folder_path, create=False):
     """Check if the path exists, if not create it
@@ -39,3 +40,14 @@ def check_file(path_to_file):
 
         print(f'File {path_to_file} exists.')
         return True
+
+
+def save_image_file(image, image_path):
+    """Save an image to a file
+
+    Args:
+        image (np.array): Image to save
+        image_path (str): Path to save the image
+    """
+    cv2.imwrite(image_path, image)
+    print(f"Image saved in {image_path}")
