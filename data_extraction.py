@@ -1,12 +1,12 @@
 import cv2
 import numpy as np
 
-import pyrealsense2 as rs
 import open3d as o3d
 
-from sensor_msgs.msg import PointCloud2
-import tf.transformations
 import sensor_msgs.point_cloud2 as pc2
+
+from scipy.spatial.transform import Rotation as R
+
 
 def get_camera_info(camera_info_msg):
     """Get camera intrinsic parameters from camera info message
@@ -18,12 +18,12 @@ def get_camera_info(camera_info_msg):
 
     return fx, fy, cx, cy
 
+
 def get_odometry(odom_msg):
     """Get odometry from odometry message
     """
     x_pos = odom_msg.pose.pose.position.x
     y_pos = odom_msg.pose.pose.position.y
-    z_pos = odom_msg.pose.pose.position.z
 
     quaternion = (
         odom_msg.pose.pose.orientation.x,
@@ -32,11 +32,19 @@ def get_odometry(odom_msg):
         odom_msg.pose.pose.orientation.w
     )
 
-    x_vel = odom_msg.twist.twist.linear.x
-    y_vel = odom_msg.twist.twist.linear.y
-    z_vel = odom_msg.twist.twist.linear.z
+    r = R.from_quat(quaternion)
+    roll, pitch, yaw = r.as_euler('xyz', degrees=False)
+    print(f"Roll: {roll}, Pitch: {pitch}, Yaw: {yaw}")
 
-    return x_pos, y_pos, z_pos, x_vel, y_vel, z_vel
+    x_vel = odom_msg.twist.twist.linear.x
+    z_rot = odom_msg.twist.twist.angular.z
+
+    robot_position = np.array([x_pos, y_pos, yaw])
+
+    robot_commands = np.array([x_vel, z_rot])
+
+    return robot_position, robot_commands
+
 
 def get_llh_position(gps_msg):
     """Get latitude, longitude and height from GPS message
@@ -47,6 +55,7 @@ def get_llh_position(gps_msg):
 
     return latitude, longitude, height
 
+
 def get_NED_position(gps_msg):
     """Get North, East and Down position from GPS message
     """
@@ -56,6 +65,7 @@ def get_NED_position(gps_msg):
 
     return x_pos, y_pos, z_pos
 
+
 def get_ECEF_position(gps_msg):
     """Get Earth-Centered, Earth-Fixed position from GPS message
     """
@@ -64,6 +74,17 @@ def get_ECEF_position(gps_msg):
     z_pos = gps_msg.point.z
 
     return x_pos, y_pos, z_pos
+
+
+def get_velocity(vel_msg):
+    """Get linear and angular velocity from velocity message
+    """
+    x_vel = vel_msg.vector.x
+    y_vel = vel_msg.vector.y
+    z_vel = vel_msg.vector.z
+
+    return x_vel, y_vel, z_vel
+
 def get_color_image(img_msg):
     """Convert ROS image message to OpenCV image
     """
@@ -72,6 +93,7 @@ def get_color_image(img_msg):
     frame = frame.reshape(img_msg.height, img_msg.width, 3)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
+
 
 def get_depth_image(depth_msg):
     """Convert ROS depth image message to OpenCV image with a colormap
@@ -88,7 +110,9 @@ def get_depth_image(depth_msg):
 
     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(rescaled_image, alpha=0.03), cv2.COLORMAP_HOT)
     merged_images = cv2.hconcat([frame, rescaled_image])
-    return depth_colormap
+    return rescaled_image
+
+
 def get_depth_map(depth_msg, image_height, image_width):
     """Convert ROS depth image message to OpenCV image
     """
@@ -96,27 +120,16 @@ def get_depth_map(depth_msg, image_height, image_width):
     depth_map_norm = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     return depth_map_norm
 
-def overlap_depth_map_with_color_image(color_image, depth_image):
-    """Overlap depth map with color image
+
+def visualize_data(color_image, depth_image):
+    """Visualze an overlap of the color image with the depth map
     """
-    added_images = cv2.addWeighted(color_image, 0.7, depth_image, 0.3, 0)
-    merged_images = cv2.hconcat([color_image, depth_image])
+    depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_HOT)
+    added_images = cv2.addWeighted(color_image, 0.7, depth_colormap, 0.3, 0)
+    merged_images = cv2.hconcat([color_image, added_images])
 
     cv2.imshow("Original images", merged_images)
-    cv2.imshow("Added images", added_images )
     cv2.waitKey(5000)
-
-    return added_images
-
-def align_depth_image_with_color_image(images):
-    """Align depth image with color image
-    """
-    pipe = rs.pipeline()
-    cfg = rs.config()
-    align = rs.align(rs.stream.color)
-    aligned_frames = align.process(images)
-    return aligned_frames
-
 
 
 def get_pointcloud_map(pointcloud_msg, image_height, image_width):
@@ -151,6 +164,7 @@ def get_pointcloud_map(pointcloud_msg, image_height, image_width):
 
     return points
 
+
 def pointcloud_to_image(xyz, rgb, image_height, image_width):
     """
     Convert point cloud data to a 2D image.
@@ -180,4 +194,5 @@ def pointcloud_to_image(xyz, rgb, image_height, image_width):
             image[y, x, :] = (rgb[i] * 255).astype(np.uint8)
 
     return image
+
 
