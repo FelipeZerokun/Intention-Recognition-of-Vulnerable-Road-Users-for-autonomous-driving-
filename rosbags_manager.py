@@ -8,9 +8,8 @@ import cv2
 import pandas as pd
 from data_extraction import *
 
-import pyrealsense2 as rs
-
 import logging
+
 
 class RosbagManager():
 
@@ -25,7 +24,6 @@ class RosbagManager():
     _global_pos_topic = '/anavs/solution/pos_llh'
     _ecef_pos_topic = '/anavs/solution/pos_xyz'
     _local_vel_topic = '/anavs/solution/vel'
-    _local_acc_topic = '/anavs/solution/acc'
 
     _odom_topic = '/RosAria/pose'
 
@@ -33,7 +31,6 @@ class RosbagManager():
                    _global_pos_topic,
                    _ecef_pos_topic,
                    _local_vel_topic,
-                   _local_acc_topic,
                    _odom_topic,]
 
     _stereo_topics = [_stereo_info, _stereo_image, _depth_image, _depth_pointcloud]
@@ -83,7 +80,7 @@ class RosbagManager():
         finally:
             self._close_bag()
 
-    def extract_stereo_data(self):
+    def extract_stereo_data(self, output_dir: str):
         """
         Extract stereo data from the rosbag.
         """
@@ -99,6 +96,17 @@ class RosbagManager():
 
         try:
             self._open_bag()
+            check_path(output_dir, create=True)
+            navigation_data = {
+                "timestamp": [],
+                "Robot odometry": [],
+                "Robot NED position": [],
+                "Robot ECEF position": [],
+                "Robot Global position": [],
+                "Robot estimated velocity": [],
+                "rgb_frame": [],
+                "depth_frame": []
+            }
 
             for topic, msg, t in self.bag.read_messages(topics=self._topics):
                 if show_info:
@@ -117,44 +125,62 @@ class RosbagManager():
                 else:
 
                     if topic == self._odom_topic:
-                        odometry = get_odometry(msg)
-                        print(f"Odometry: {odometry}")
+                        robot_pos, robot_commands = get_odometry(msg)
                         odom_check = True
 
                     elif topic == self._ned_pos_topic:
                         # Extract position
                         x_pos, y_pos, z_pos = get_NED_position(msg)
-                        print("NED position: ", x_pos, y_pos, z_pos)
 
                     elif topic == self._global_pos_topic:
                         # Extract position
                         lat, long, height = get_llh_position(msg)
-                        print("Global position: ", lat, long, height)
 
                     elif topic == self._ecef_pos_topic:
                         # Extract position
                         ecef_x, ecef_y, ecef_z = get_ECEF_position(msg)
-                        print("ECEF position: ", ecef_x, ecef_y, ecef_z)
+
+                    elif topic == self._local_vel_topic:
+                        vel_x, vel_y, vel_z = get_velocity(msg)
 
                     elif topic == self._depth_image:
                         depth_image = get_depth_image(msg)
-                        t_depth = t.to_nsec()
                         depth_map_check = True
 
                     elif topic == self._stereo_image:
                         # Extract frame
                         frame = get_color_image(msg)
+                        timestamp = t.to_nsec()
                         stereo_image_check = True
-                        t_image = t.to_nsec()
 
                     elif topic == self._depth_pointcloud:
                         # points = get_pointcloud_map(msg, image_height, image_width)
                         pointcloud_check = True
 
                     if depth_map_check and stereo_image_check and odom_check:
-                        added_images = overlap_depth_map_with_color_image(frame, depth_image)
+                        visualize_data(frame, depth_image)
+
+                        color_file_name = output_dir + f'rgb_frame_{timestamp}.png'
+                        depth_file_name = output_dir + f'depth_frame_{timestamp}.png'
+
+                        navigation_data["timestamp"].append(timestamp)
+                        navigation_data["Robot odometry"].append(robot_pos)
+                        navigation_data["Robot NED position"].append([x_pos, y_pos, z_pos])
+                        navigation_data["Robot ECEF position"].append([ecef_x, ecef_y, ecef_z])
+                        navigation_data["Robot Global position"].append([lat, long, height])
+                        navigation_data["Robot estimated velocity"].append([vel_x, vel_y, vel_z])
+                        navigation_data["rgb_frame"].append(color_file_name)
+                        navigation_data["depth_frame"].append(depth_file_name)
+
+                        # Write the data into a CSV file
+                        nav_data_df = pd.DataFrame(navigation_data)
+                        csv_file_name = output_dir + 'navigation_data.csv'
+
+                        nav_data_df.to_csv(csv_file_name, index=False)
 
                         depth_map_check = stereo_image_check = odom_check = False
+
+            print("Data extracted successfully.")
 
 
         except Exception as e:
@@ -295,7 +321,7 @@ def main():
     output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/'
     bag = RosbagManager(rosbag_path, rosbag_name)
     #bag.check_bag()
-    bag.extract_stereo_data()
+    bag.extract_stereo_data(output_path)
 
     # bag.extract_frames_with_nav_data(output_path)
 
