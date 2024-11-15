@@ -50,4 +50,3 @@ def save_image_file(image, image_path):
         image_path (str): Path to save the image
     """
     cv2.imwrite(image_path, image)
-    print(f"Image saved in {image_path}")
