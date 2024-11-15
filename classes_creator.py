@@ -13,10 +13,10 @@ class HumanActionClassCreation:
         Class to create a dataset with human actions from several frames extracted from a video file.
 
         Args:
-            video_data (Path): Path to the CSV file with the frames data.
+            video_data (Path): Path to the CSV file with the frame's data.
 
         """
-        self._DATA_COLUMNS = ['timestamp', 'frame', 'x_pos', 'y_pos', 'z_pos']
+        self._DATA_COLUMNS = ['timestamp', 'Robot odometry', 'rgb_frame', 'depth_frame']
         self.frames_data = frames_data
         check_file(self.frames_data)
 
@@ -50,11 +50,10 @@ class HumanActionClassCreation:
         Manual creation of classes for human actions in the frames.
         """
         frame_data = self.check_correct_frames_data()
-        frames = frame_data['frame'].tolist()
+        color_frames = frame_data['rgb_frame'].tolist()
+        depth_frames = frame_data['depth_frame'].tolist()
         timestamps = frame_data['timestamp'].tolist()
-        x_pos = frame_data['x_pos'].tolist()
-        y_pos = frame_data['y_pos'].tolist()
-        z_pos = frame_data['z_pos'].tolist()
+        x_pos = frame_data['Robot odometry'].tolist()
 
         walking = False
         standing_still = False
@@ -63,7 +62,7 @@ class HumanActionClassCreation:
 
         index = 0
         while True:
-            frame_path = frames[index]
+            frame_path = color_frames[index]
             frame = cv2.imread(frame_path)
 
             cv2.imshow('Frame viewer', frame)
@@ -119,7 +118,7 @@ class HumanActionClassCreation:
                     continue
 
             if key == ord('d'):
-                if index == len(frames) - 1:
+                if index == len(color_frames) - 1:
                     print('Already at the last frame.')
                     continue
                 else:
@@ -152,11 +151,13 @@ class HumanActionClassCreation:
         frames_to_save.to_csv(csv_output_path, index=False)
 
         for _, row in frames_to_save.iterrows():
-            frame_path = Path(row['frame'])
-            if frame_path.exists():
-                shutil.copy(frame_path, action_folder / frame_path.name)
+            color_frame_path = Path(row['rgb_frame'])
+            depth_frame_path = Path(row['depth_frame'])
+            if color_frame_path.exists() and depth_frame_path.exists():
+                shutil.copy(color_frame_path, action_folder / color_frame_path.name)
+                shutil.copy(depth_frame_path, action_folder / depth_frame_path.name)
             else:
-                print(f"Frame {row['frame']} does not exist.")
+                print(f"Frame {row['rgb_frame']} does not exist.")
 
 
 
