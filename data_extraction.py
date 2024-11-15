@@ -34,7 +34,6 @@ def get_odometry(odom_msg):
 
     r = R.from_quat(quaternion)
     roll, pitch, yaw = r.as_euler('xyz', degrees=False)
-    print(f"Roll: {roll}, Pitch: {pitch}, Yaw: {yaw}")
 
     x_vel = odom_msg.twist.twist.linear.x
     z_rot = odom_msg.twist.twist.angular.z
