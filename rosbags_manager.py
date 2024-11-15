@@ -1,4 +1,4 @@
-from project_utils import check_path
+from project_utils import check_path, save_image_file
 
 import rosbag
 from pathlib import Path
@@ -158,10 +158,13 @@ class RosbagManager():
                         pointcloud_check = True
 
                     if depth_map_check and stereo_image_check and odom_check:
-                        visualize_data(frame, depth_image)
+                        # visualize_data(frame, depth_image)
 
-                        color_file_name = output_dir + f'rgb_frame_{timestamp}.png'
-                        depth_file_name = output_dir + f'depth_frame_{timestamp}.png'
+                        color_file_name = output_dir + f'{timestamp}_rgb_frame.png'
+                        depth_file_name = output_dir + f'{timestamp}_depth_frame.png'
+
+                        save_image_file(frame, color_file_name)
+                        save_image_file(depth_image, depth_file_name)
 
                         navigation_data["timestamp"].append(timestamp)
                         navigation_data["Robot odometry"].append(robot_pos)
@@ -172,13 +175,13 @@ class RosbagManager():
                         navigation_data["rgb_frame"].append(color_file_name)
                         navigation_data["depth_frame"].append(depth_file_name)
 
-                        # Write the data into a CSV file
-                        nav_data_df = pd.DataFrame(navigation_data)
-                        csv_file_name = output_dir + 'navigation_data.csv'
-
-                        nav_data_df.to_csv(csv_file_name, index=False)
-
                         depth_map_check = stereo_image_check = odom_check = False
+
+            # Write the data into a CSV file
+            nav_data_df = pd.DataFrame(navigation_data)
+            csv_file_name = output_dir + 'navigation_data.csv'
+
+            nav_data_df.to_csv(csv_file_name, index=False)
 
             print("Data extracted successfully.")
 
