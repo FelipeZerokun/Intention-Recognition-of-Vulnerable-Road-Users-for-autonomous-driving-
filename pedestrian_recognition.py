@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 import cv2
 from project_utils import (check_path, check_file, )
+import os
 
 #load YOLOv5 model
 class PedestrianRecognition:
@@ -39,14 +40,23 @@ class PedestrianRecognition:
 
         for index, row in frame_data.iterrows():
             timestamp = row['timestamp']
-            odometry = [row['x_pos'], row['y_pos'], row['z_pos'], row['x_vel'], row['y_vel'], row['z_vel']]
-            frame = cv2.imread(row['frame'])
+            odometry = row['Robot odometry']
+            estimated_vel = row['Robot estimated velocity']
+            color_frame_path = row['rgb_frame']
+            depth_frame_path = row['depth_frame']
+            
+            if os.name == 'nt':
+                color_frame_path = color_frame_path.replace('/media/felipezero/T7 Shield/', 'D:/')
+                depth_frame_path = depth_frame_path.replace('/media/felipezero/T7 Shield/', 'D:/')
 
-            results = self.model(frame)
+            color_frame = cv2.imread(color_frame_path)
+            depth_frame = cv2.imread(depth_frame_path, cv2.IMREAD_GRAYSCALE)
+
+            results = self.model(color_frame)
             persons = results.xyxy[0][results.xyxy[0][:, 5] == 0]
 
             if len(persons) == 0:
-                cv2.imshow('Pedestrian detection', frame)
+                cv2.imshow('Pedestrian detection', color_frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     continue
 
@@ -55,6 +65,7 @@ class PedestrianRecognition:
                 detection = {
                     'timestamp': timestamp,
                     'odometry': odometry,
+                    'velocity': estimated_vel,
                     'bounding_box': [x1, y1, x2, y2],
                     'confidence': confidence
                 }
@@ -65,11 +76,13 @@ class PedestrianRecognition:
                 x1, y1, x2, y2, confidence, class_id = person
                 if confidence < 0.6:
                     continue
-                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
-                cv2.putText(frame, f'Person {confidence:.2f}', (int(x1), int(y1 - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-
-            cv2.imshow('Pedestrian detection', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.rectangle(color_frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+                roi = depth_frame[int(y1):int(y2), int(x1):int(x2)]
+                mean_depth = roi.mean()
+                cv2.putText(color_frame, f'Person {confidence:.2f}', (int(x1), int(y1 - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+                cv2.putText(color_frame, f'Depth: {mean_depth:.2f} m', (int(x1), int(y1 - 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            cv2.imshow('Pedestrian detection', color_frame)
+            if cv2.waitKey(2000) & 0xFF == ord('q'):
                 break
 
         cv2.destroyAllWindows()
@@ -79,7 +92,8 @@ class PedestrianRecognition:
 def main():
 
     frames_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/classes/')
-    class_01 = Path(frames_path / 'walking_2')
+    frames_path = Path('D:/DATA/thesis/Videos/frames/classes/')
+    class_01 = Path(frames_path / 'walking_1')
 
     pedestrian_recognition = PedestrianRecognition(data_directory=class_01)
 
