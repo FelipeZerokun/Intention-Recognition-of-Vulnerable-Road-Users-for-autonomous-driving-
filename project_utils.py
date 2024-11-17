@@ -1,6 +1,23 @@
 import os
 import cv2
+from pathlib import Path
 
+
+def check_os_windows(data_dir: str):
+    """Check if the OS is Windows and change the path accordingly
+
+    Args:
+        data_dir (str): Path to change
+
+    Returns:
+        Path: Path with the correct format
+    """
+    if os.name == 'nt':
+        data_dir = str(data_dir).replace('\\', '/')
+        data_dir = data_dir.replace('/media/felipezero/T7 Shield/', 'D:/')
+        return Path(data_dir)
+    else:
+        return data_dir
 def check_path(folder_path, create=False):
     """Check if the path exists, if not create it
 

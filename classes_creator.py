@@ -5,7 +5,7 @@ import shutil
 import cv2
 import pandas as pd
 
-from project_utils import check_path, check_file
+from project_utils import check_path, check_file, check_os_windows
 
 class HumanActionClassCreation:
     def __init__(self, frames_data: Path, output_folder: Path):
@@ -17,7 +17,7 @@ class HumanActionClassCreation:
 
         """
         self._DATA_COLUMNS = ['timestamp', 'Robot odometry', 'rgb_frame', 'depth_frame']
-        self.frames_data = frames_data
+        self.frames_data = check_os_windows(frames_data)
         check_file(self.frames_data)
 
         self.output_folder = output_folder
@@ -63,6 +63,7 @@ class HumanActionClassCreation:
         index = 0
         while True:
             frame_path = color_frames[index]
+            frame_path = check_os_windows(frame_path)
             frame = cv2.imread(frame_path)
 
             cv2.imshow('Frame viewer', frame)
@@ -146,6 +147,7 @@ class HumanActionClassCreation:
 
         frame_data = self.check_correct_frames_data()
         frames_to_save = frame_data[(frame_data['timestamp'] >= start_timestamp) & (frame_data['timestamp'] <= end_timestamp)]
+        frames_to_save['action'] = action
 
         csv_output_path = action_folder / f"{action}_{action_counter}.csv"
         frames_to_save.to_csv(csv_output_path, index=False)
