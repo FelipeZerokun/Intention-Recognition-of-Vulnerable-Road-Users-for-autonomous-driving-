@@ -101,11 +101,12 @@ def get_depth_image(depth_msg):
 
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
-
     # Cropping the image to make it align with the RGB image
     croppeg_image = frame[120:-120, 120:-120]
-
     rescaled_image = cv2.resize(croppeg_image, (depth_msg.width, depth_msg.height))
+
+    # TODO: Create a function that normalizes the depth values into a range from 0 to 255.
+    # Another function should restore the values to their original range.
 
     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(rescaled_image, alpha=0.03), cv2.COLORMAP_HOT)
     merged_images = cv2.hconcat([frame, rescaled_image])
