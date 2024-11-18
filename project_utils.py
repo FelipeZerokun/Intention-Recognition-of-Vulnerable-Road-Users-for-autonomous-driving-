@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 from pathlib import Path
 
 
@@ -67,3 +68,20 @@ def save_image_file(image, image_path):
         image_path (str): Path to save the image
     """
     cv2.imwrite(image_path, image)
+
+def restore_depth_values(depth_image, min_max_depth, depth_scale=0.001):
+    """Restore the depth values to their original range
+
+    Args:
+        depth_image (np.array): Depth image
+        min_max_depth (tuple): Min and max depth values
+        depth_scale (float): Depth scale
+
+    Returns:
+        np.array: Depth image with restored values
+    """
+
+    restored_depth = cv2.normalize(depth_image, None, min_max_depth[0], min_max_depth[1], cv2.NORM_MINMAX)
+    restored_depth = restored_depth.astype(np.uint16)
+
+    return restored_depth

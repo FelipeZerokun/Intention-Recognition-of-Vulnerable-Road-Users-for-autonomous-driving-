@@ -105,7 +105,8 @@ class RosbagManager():
                 "Robot Global position": [],
                 "Robot estimated velocity": [],
                 "rgb_frame": [],
-                "depth_frame": []
+                "depth_frame": [],
+                "min_max_depth": []
             }
 
             for topic, msg, t in self.bag.read_messages(topics=self._topics):
@@ -144,7 +145,7 @@ class RosbagManager():
                         vel_x, vel_y, vel_z = get_velocity(msg)
 
                     elif topic == self._depth_image:
-                        depth_image = get_depth_image(msg)
+                        depth_image, min_max_depth = get_depth_image(msg)
                         depth_map_check = True
 
                     elif topic == self._stereo_image:
@@ -174,6 +175,7 @@ class RosbagManager():
                         navigation_data["Robot estimated velocity"].append([vel_x, vel_y, vel_z])
                         navigation_data["rgb_frame"].append(color_file_name)
                         navigation_data["depth_frame"].append(depth_file_name)
+                        navigation_data["min_max_depth"].append(min_max_depth)
 
                         depth_map_check = stereo_image_check = odom_check = False
 

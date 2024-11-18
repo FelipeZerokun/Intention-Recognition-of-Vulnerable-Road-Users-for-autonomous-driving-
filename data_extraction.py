@@ -101,25 +101,26 @@ def get_depth_image(depth_msg):
 
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
-    # Cropping the image to make it align with the RGB image
-    croppeg_image = frame[120:-120, 120:-120]
-    rescaled_image = cv2.resize(croppeg_image, (depth_msg.width, depth_msg.height))
 
     # TODO: Create a function that normalizes the depth values into a range from 0 to 255.
     # Another function should restore the values to their original range.
 
-    depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(rescaled_image, alpha=0.03), cv2.COLORMAP_HOT)
-    merged_images = cv2.hconcat([frame, rescaled_image])
-    return rescaled_image
+    fixed_image, min_max_depth_values = convert_depth2image(frame)
+    return fixed_image, min_max_depth_values
 
 
-def get_depth_map(depth_msg, image_height, image_width):
-    """Convert ROS depth image message to OpenCV image
+def convert_depth2image(depth_array):
+    """Convert depth array to OpenCV image
     """
-    depth_map = np.frombuffer(depth_msg.data, dtype=np.uint16).reshape(image_height, image_width, 1)
-    depth_map_norm = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-    return depth_map_norm
+    croppeg_image = depth_array[120:-120, 120:-120]
+    max_depth_value = np.max(croppeg_image)
+    min_depth_value = np.min(croppeg_image)
 
+    cropped_image = cv2.resize(croppeg_image, (depth_array.shape[1], depth_array.shape[0]))
+
+    depth_image = cv2.normalize(depth_array, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+
+    return depth_image, (min_depth_value, max_depth_value)
 
 def visualize_data(color_image, depth_image):
     """Visualze an overlap of the color image with the depth map
