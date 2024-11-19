@@ -69,7 +69,7 @@ def save_image_file(image, image_path):
     """
     cv2.imwrite(image_path, image)
 
-def restore_depth_values(depth_image, min_max_depth, depth_scale=0.001):
+def restore_depth_values(depth_image, min_depth, max_depth, depth_scale=0.001):
     """Restore the depth values to their original range
 
     Args:
@@ -81,7 +81,8 @@ def restore_depth_values(depth_image, min_max_depth, depth_scale=0.001):
         np.array: Depth image with restored values
     """
 
-    restored_depth = cv2.normalize(depth_image, None, min_max_depth[0], min_max_depth[1], cv2.NORM_MINMAX)
+    restored_depth = cv2.normalize(depth_image, None, min_depth, max_depth, cv2.NORM_MINMAX)
     restored_depth = restored_depth.astype(np.uint16)
+    mean_depth = np.mean(restored_depth)
 
-    return restored_depth
+    return mean_depth * depth_scale

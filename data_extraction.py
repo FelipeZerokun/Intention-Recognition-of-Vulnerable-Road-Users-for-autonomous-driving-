@@ -102,8 +102,6 @@ def get_depth_image(depth_msg):
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
 
-    # TODO: Create a function that normalizes the depth values into a range from 0 to 255.
-    # Another function should restore the values to their original range.
 
     fixed_image, min_max_depth_values = convert_depth2image(frame)
     return fixed_image, min_max_depth_values
