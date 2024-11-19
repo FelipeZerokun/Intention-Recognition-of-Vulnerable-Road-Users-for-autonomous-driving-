@@ -147,7 +147,7 @@ class HumanActionClassCreation:
 
         frame_data = self.check_correct_frames_data()
         frames_to_save = frame_data[(frame_data['timestamp'] >= start_timestamp) & (frame_data['timestamp'] <= end_timestamp)]
-        frames_to_save['action'] = action
+        frames_to_save.loc[:,'action'] = action
 
         csv_output_path = action_folder / f"{action}_{action_counter}.csv"
         frames_to_save.to_csv(csv_output_path, index=False)
