@@ -98,27 +98,21 @@ def get_depth_image(depth_msg):
     """Convert ROS depth image message to OpenCV image with a colormap
 
     """
-
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
+    fixed_image = convert_depth2image(frame)
+    min_max = (fixed_image.min(), fixed_image.max())
 
-
-    fixed_image, min_max_depth_values = convert_depth2image(frame)
-    return fixed_image, min_max_depth_values
+    return fixed_image, min_max
 
 
 def convert_depth2image(depth_array):
     """Convert depth array to OpenCV image
     """
-    croppeg_image = depth_array[120:-120, 120:-120]
-    max_depth_value = np.max(croppeg_image)
-    min_depth_value = np.min(croppeg_image)
+    cropped_image = depth_array[120:-120, 120:-120]
+    cropped_image = cv2.resize(cropped_image, (depth_array.shape[1], depth_array.shape[0]))
 
-    cropped_image = cv2.resize(croppeg_image, (depth_array.shape[1], depth_array.shape[0]))
-
-    depth_image = cv2.normalize(depth_array, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-
-    return depth_image, (min_depth_value, max_depth_value)
+    return cropped_image
 
 def visualize_data(color_image, depth_image):
     """Visualze an overlap of the color image with the depth map

@@ -1,8 +1,9 @@
 import torch
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import cv2
-from project_utils import (check_path, check_file, restore_depth_values)
+from project_utils import (check_path, check_file, estimate_pedestrian_distance)
 import os
 
 #load YOLOv5 model
@@ -39,22 +40,24 @@ class PedestrianRecognition:
 
         frame_data = self.get_class()
 
-
         for index, row in frame_data.iterrows():
             timestamp = row['timestamp']
             odometry = row['Robot odometry']
             estimated_vel = row['Robot estimated velocity']
             color_frame_path = row['rgb_frame']
             depth_frame_path = row['depth_frame']
-            min_depth = int(row['min_depth_value'])
-            max_depth = int(row['max_depth_value'])
+            min_depth = int(row['min_depth'])
+            max_depth = int(row['max_depth'])
             
             if os.name == 'nt':
                 color_frame_path = color_frame_path.replace('/media/felipezero/T7 Shield/', 'D:/')
                 depth_frame_path = depth_frame_path.replace('/media/felipezero/T7 Shield/', 'D:/')
 
             color_frame = cv2.imread(color_frame_path)
-            depth_frame = cv2.imread(depth_frame_path, cv2.IMREAD_GRAYSCALE)
+            depth_frame = cv2.imread(depth_frame_path, cv2.IMREAD_UNCHANGED)
+
+            # restored_depth = cv2.normalize(depth_frame, None, min_depth, max_depth, cv2.NORM_MINMAX)
+            # restored_depth = restored_depth.astype(np.uint16)
 
             results = self.model(color_frame)
             persons = results.xyxy[0][results.xyxy[0][:, 5] == 0]
@@ -82,11 +85,11 @@ class PedestrianRecognition:
                     continue
                 cv2.rectangle(color_frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
                 roi = depth_frame[int(y1):int(y2), int(x1):int(x2)]
-                pedestrian_distance = restore_depth_values(roi, min_depth, max_depth)
+                pedestrian_distance = estimate_pedestrian_distance(roi)
                 cv2.putText(color_frame, f'Person {confidence:.2f}', (int(x1), int(y1 - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
                 cv2.putText(color_frame, f'Depth: {pedestrian_distance:.2f} m', (int(x1), int(y1 - 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
             cv2.imshow('Pedestrian detection', color_frame)
-            if cv2.waitKey(200) & 0xFF == ord('q'):
+            if cv2.waitKey(1000) & 0xFF == ord('q'):
                 break
 
         cv2.destroyAllWindows()

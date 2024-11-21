@@ -60,16 +60,19 @@ def check_file(path_to_file):
         return True
 
 
-def save_image_file(image, image_path):
+def save_image_file(image, image_path, depth=False):
     """Save an image to a file
 
     Args:
         image (np.array): Image to save
         image_path (str): Path to save the image
     """
-    cv2.imwrite(image_path, image)
+    if depth:
+        cv2.imwrite(image_path, image.astype(np.uint16))
 
-def restore_depth_values(depth_image, min_depth, max_depth, depth_scale=0.001):
+    else:
+        cv2.imwrite(image_path, image)
+def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     """Restore the depth values to their original range
 
     Args:
@@ -81,8 +84,14 @@ def restore_depth_values(depth_image, min_depth, max_depth, depth_scale=0.001):
         np.array: Depth image with restored values
     """
 
-    restored_depth = cv2.normalize(depth_image, None, min_depth, max_depth, cv2.NORM_MINMAX)
-    restored_depth = restored_depth.astype(np.uint16)
-    mean_depth = np.mean(restored_depth)
+    mean_depth = np.mean(depth_image)
+    # Get a small 5x5 matrix in the center of the image and calculate the mean of that matrix
+    # This is done to avoid considering the background
+    center_x = depth_image.shape[1] // 2
+    center_y = depth_image.shape[0] // 2
+    mean_depth_around_center = np.mean(depth_image[center_y-2:center_y+3, center_x-2:center_x+3])
 
+    print(f"Comparing methods to obtain the distance")
+    print(f"First with regular mean: {mean_depth*depth_scale}")
+    print(f"Second with mean around center: {mean_depth_around_center*depth_scale}")
     return mean_depth * depth_scale
