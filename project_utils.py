@@ -94,4 +94,4 @@ def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     print(f"Comparing methods to obtain the distance")
     print(f"First with regular mean: {mean_depth*depth_scale}")
     print(f"Second with mean around center: {mean_depth_around_center*depth_scale}")
-    return mean_depth * depth_scale
+    return mean_depth_around_center * depth_scale

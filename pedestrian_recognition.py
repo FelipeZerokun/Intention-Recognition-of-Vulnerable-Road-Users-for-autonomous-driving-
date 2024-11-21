@@ -89,7 +89,7 @@ class PedestrianRecognition:
                 cv2.putText(color_frame, f'Person {confidence:.2f}', (int(x1), int(y1 - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
                 cv2.putText(color_frame, f'Depth: {pedestrian_distance:.2f} m', (int(x1), int(y1 - 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
             cv2.imshow('Pedestrian detection', color_frame)
-            if cv2.waitKey(1000) & 0xFF == ord('q'):
+            if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
 
         cv2.destroyAllWindows()
