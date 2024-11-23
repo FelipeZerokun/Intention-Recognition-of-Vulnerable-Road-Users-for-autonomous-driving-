@@ -54,10 +54,8 @@ class PedestrianRecognition:
                 depth_frame_path = depth_frame_path.replace('/media/felipezero/T7 Shield/', 'D:/')
 
             color_frame = cv2.imread(color_frame_path)
-            depth_frame = cv2.imread(depth_frame_path, cv2.IMREAD_UNCHANGED)
-
-            # restored_depth = cv2.normalize(depth_frame, None, min_depth, max_depth, cv2.NORM_MINMAX)
-            # restored_depth = restored_depth.astype(np.uint16)
+            depth_map = cv2.imread(depth_frame_path, cv2.IMREAD_UNCHANGED)
+            depth_frame = cv2.imread(depth_frame_path, cv2.IMREAD_GRAYSCALE)
 
             results = self.model(color_frame)
             persons = results.xyxy[0][results.xyxy[0][:, 5] == 0]
@@ -84,11 +82,16 @@ class PedestrianRecognition:
                 if confidence < 0.5:
                     continue
                 cv2.rectangle(color_frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
-                roi = depth_frame[int(y1):int(y2), int(x1):int(x2)]
-                pedestrian_distance = estimate_pedestrian_distance(roi)
+                cv2.rectangle(depth_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                roi_depth_values = depth_map[int(y1):int(y2), int(x1):int(x2)]
+                pedestrian_distance = estimate_pedestrian_distance(roi_depth_values)
+
                 cv2.putText(color_frame, f'Person {confidence:.2f}', (int(x1), int(y1 - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
                 cv2.putText(color_frame, f'Depth: {pedestrian_distance:.2f} m', (int(x1), int(y1 - 30)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-            cv2.imshow('Pedestrian detection', color_frame)
+
+            merged_images = cv2.hconcat([color_frame, depth_frame])
+
+            cv2.imshow('Pedestrian detection', merged_images)
             if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
 

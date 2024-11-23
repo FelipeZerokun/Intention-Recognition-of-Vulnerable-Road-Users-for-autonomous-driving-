@@ -45,6 +45,7 @@ class RosbagManager():
 
     def _open_bag(self):
         self.bag = rosbag.Bag(self.file, 'r')
+        print("Rosbag opened successfully")
         logging.info('Rosbag opened successfully.')
 
     def _close_bag(self):
@@ -123,6 +124,12 @@ class RosbagManager():
                             rotation_params = np.array(msg.R).reshape(3,3) # 3x3 matrix
                             projection_matrix = np.array(msg.P).reshape(3,4) # 3x4 matrix
 
+                            # Initialize the variables for the robot position
+                            x_pos = y_pos = z_pos = 0
+                            lat = long = height = 0
+                            ecef_x = ecef_y = ecef_z = 0
+                            vel_x = vel_y = vel_z = 0
+
                             show_info = False
                 else:
 
@@ -165,8 +172,8 @@ class RosbagManager():
                         color_file_name = output_dir + f'{timestamp}_rgb_frame.png'
                         depth_file_name = output_dir + f'{timestamp}_depth_frame.png'
 
-                        # save_image_file(frame, color_file_name)
-                        # save_image_file(depth_image, depth_file_name, depth=True)
+                        save_image_file(frame, color_file_name)
+                        save_image_file(depth_image, depth_file_name, depth=True)
 
                         navigation_data["timestamp"].append(timestamp)
                         navigation_data["Robot odometry"].append(robot_pos)
@@ -324,11 +331,11 @@ class RosbagManager():
 
 def main():
     rosbag_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Rosbags/2023_05_05/')
-    rosbag_name = 'Test3_12_37_C-R/2023_05_05_12_37_Gera_C-R_Alt.orig.bag'
+    rosbag_name = 'Test1_10_14_C-R/2023_05_05_10_14_Gera_C-R_Alt.orig.bag'
 
     output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/'
     bag = RosbagManager(rosbag_path, rosbag_name)
-    #bag.check_bag()
+    # bag.check_bag()
     bag.extract_stereo_data(output_path)
 
     # bag.extract_frames_with_nav_data(output_path)
