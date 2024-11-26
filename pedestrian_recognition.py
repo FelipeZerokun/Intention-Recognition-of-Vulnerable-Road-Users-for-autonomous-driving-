@@ -53,8 +53,8 @@ class PedestrianRecognition:
             estimated_vel = row['Robot estimated velocity']
             color_frame_path = row['rgb_frame']
             depth_frame_path = row['depth_frame']
-            min_depth = int(row['min_depth'])
-            max_depth = int(row['max_depth'])
+            min_depth = 0.3
+            max_depth = 20.0
 
             pedestrians_in_frame = []
             
@@ -79,6 +79,10 @@ class PedestrianRecognition:
                 w = x2 - x1
                 h = y2 - y1
                 detection_data = [[int(x1), int(y1), int(w), int(h)], confidence, class_id]
+
+                depth_values_of_roi = depth_map[int(y1):int(y2), int(x1):int(x2)]
+                pedestrian_distance = estimate_pedestrian_distance(depth_values_of_roi)
+
                 detection = {
                     'timestamp': timestamp,
                     'odometry': odometry,
@@ -86,6 +90,9 @@ class PedestrianRecognition:
                     'bounding_box': [x1, y1, x2, y2],
                     'confidence': confidence
                 }
+
+                if confidence < 0.5 or pedestrian_distance > max_depth or pedestrian_distance < min_depth:
+                    continue
 
                 self.detection_results.append(detection)
                 pedestrians_in_frame.append(detection_data)
@@ -103,9 +110,10 @@ class PedestrianRecognition:
                 # Draw the bounding box
                 cv2.rectangle(color_frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
                 cv2.putText(color_frame, f'Track ID: {track_id}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+                cv2.putText(color_frame, f'Depth: {pedestrian_distance:.2f} m', (x1, y1 - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
             cv2.imshow('Pedestrian detection', color_frame)
-            if cv2.waitKey(1000) & 0xFF == ord('q'):
+            if cv2.waitKey(5000) & 0xFF == ord('q'):
                 break
 
 
@@ -161,7 +169,7 @@ def main():
 
     frames_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/classes/')
     # frames_path = Path('D:/DATA/thesis/Videos/frames/classes/')
-    class_01 = Path(frames_path / 'walking_1')
+    class_01 = Path(frames_path / 'walking_3')
 
     pedestrian_recognition = PedestrianRecognition(data_directory=class_01)
 
