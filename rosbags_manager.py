@@ -107,8 +107,7 @@ class RosbagManager():
                 "Robot estimated velocity": [],
                 "rgb_frame": [],
                 "depth_frame": [],
-                "min_depth": [],
-                "max_depth": []
+                "action": []
             }
 
             for topic, msg, t in self.bag.read_messages(topics=self._topics):
@@ -153,7 +152,7 @@ class RosbagManager():
                         vel_x, vel_y, vel_z = get_velocity(msg)
 
                     elif topic == self._depth_image:
-                        depth_image, min_max_depth = get_depth_image(msg)
+                        depth_image = get_depth_image(msg)
                         depth_map_check = True
 
                     elif topic == self._stereo_image:
@@ -183,9 +182,7 @@ class RosbagManager():
                         navigation_data["Robot estimated velocity"].append([vel_x, vel_y, vel_z])
                         navigation_data["rgb_frame"].append(color_file_name)
                         navigation_data["depth_frame"].append(depth_file_name)
-                        navigation_data["min_depth"].append(min_max_depth[0])
-                        navigation_data["max_depth"].append(min_max_depth[1])
-
+                        navigation_data["action"].append("")
 
                         depth_map_check = stereo_image_check = odom_check = False
 
@@ -243,102 +240,16 @@ class RosbagManager():
         finally:
             self._close_bag()
 
-    def extract_frames_with_nav_data(self, output_dir: str):
-        try:
-            self._open_bag()
-
-            check_path(output_dir, create=True)
-            navigation_data = {
-                "timestamp": [],
-                "x_pos": [],
-                "y_pos": [],
-                "z_pos": [],
-                "x_vel": [],
-                "y_vel": [],
-                "z_vel": [],
-                "frame": []
-            }
-            timestamp = 'N/A'
-            x_pos = 'N/A'
-            y_pos = 'N/A'
-            z_pos = 'N/A'
-            x_vel = 'N/A'
-            y_vel = 'N/A'
-            z_vel = 'N/A'
-            frame = 'N/A'
-
-            odom_check = False
-            vel_check = False
-
-            for topic, msg, t in self.bag.read_messages(topics=self._topics):
-
-                if topic == self._odom_topic:
-                    odometry = msg.pose.pose.position
-                    x_pos = odometry.x
-                    y_pos = odometry.y
-                    z_pos = odometry.z
-
-                    odom_check = True
-
-                if topic == self._local_vel_topic:
-                    velocity = msg.vector
-                    x_vel = velocity.x
-                    y_vel = velocity.y
-                    z_vel = velocity.z
-
-                    vel_check = True
-
-                if topic == self._stereo_image and odom_check:
-                    # Extract frame
-                    frame = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, 3)
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    timestamp = t.to_nsec()
-
-
-                    frame_file_name = output_dir + f'frame_{timestamp}.png'
-
-                    navigation_data["timestamp"].append(timestamp)
-                    navigation_data["x_pos"].append(x_pos)
-                    navigation_data["y_pos"].append(y_pos)
-                    navigation_data["z_pos"].append(z_pos)
-                    navigation_data["x_vel"].append(x_vel)
-                    navigation_data["y_vel"].append(y_vel)
-                    navigation_data["z_vel"].append(z_vel)
-                    navigation_data["frame"].append(frame_file_name)
-                    #cv2.imwrite(frame_file_name, frame)
-
-                    odom_check = vel_check = False
-                    timestamp = 'N/A'
-                    x_pos = 'N/A'
-                    y_pos = 'N/A'
-                    z_pos = 'N/A'
-                    x_vel = 'N/A'
-                    y_vel = 'N/A'
-                    z_vel = 'N/A'
-                    frame = 'N/A'
-
-            # Convert navigation_data to DataFrame and save as CSV
-            nav_data_df = pd.DataFrame(navigation_data)
-            csv_file_name = output_dir + 'navigation_data.csv'
-            nav_data_df.to_csv(csv_file_name, index=False)
-
-        except Exception as e:
-            print(f'Error while extracting images and odometry from rosbag {self.name}: {e}')
-
-        finally:
-            self._close_bag()
-
 
 def main():
     rosbag_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Rosbags/2023_05_05/')
-    rosbag_name = 'Test1_10_14_C-R/2023_05_05_10_14_Gera_C-R_Alt.orig.bag'
+    rosbag_name = 'Test3_12_37_C-R/2023_05_05_12_37_Gera_C-R_Alt.orig.bag'
 
-    output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/'
+    output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/'
     bag = RosbagManager(rosbag_path, rosbag_name)
     # bag.check_bag()
     bag.extract_stereo_data(output_path)
 
-    # bag.extract_frames_with_nav_data(output_path)
 
 
 
