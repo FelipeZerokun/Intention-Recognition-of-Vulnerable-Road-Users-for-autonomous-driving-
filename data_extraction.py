@@ -101,9 +101,8 @@ def get_depth_image(depth_msg):
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
     fixed_image = convert_depth2image(frame)
-    min_max = (fixed_image.min(), fixed_image.max())
 
-    return fixed_image, min_max
+    return fixed_image
 
 
 def convert_depth2image(depth_array):
