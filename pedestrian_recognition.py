@@ -26,7 +26,7 @@ class PedestrianRecognition:
         )
 
     def get_class(self):
-        """ Checks if the directory has several floders representing the classes and
+        """ Checks if the directory has several folders representing the classes and
         if there is a csv file with the data of each frame"""
 
         detected_class = self.classes_dir.parts[-1]
@@ -107,10 +107,15 @@ class PedestrianRecognition:
                 ltrb = track.to_tlbr() # Get the bounding box
                 x1, y1, x2, y2 = map(int, ltrb)
 
+                depth_values_of_roi = depth_map[int(y1):int(y2), int(x1):int(x2)]
+                pedestrian_image = color_frame[int(y1):int(y2), int(x1):int(x2)]
+                pedestrian_distance = estimate_pedestrian_distance(depth_values_of_roi)
+                cv2.imshow('Detected pedestrian', pedestrian_image)
+
                 # Draw the bounding box
                 cv2.rectangle(color_frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                cv2.putText(color_frame, f'Track ID: {track_id}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-                cv2.putText(color_frame, f'Depth: {pedestrian_distance:.2f} m', (x1, y1 - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+                cv2.putText(color_frame, f'Track ID: {track_id}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 2)
+                cv2.putText(color_frame, f'Depth: {pedestrian_distance:.2f} m', (x1, y1 - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 2)
 
             cv2.imshow('Pedestrian detection', color_frame)
             if cv2.waitKey(5000) & 0xFF == ord('q'):
@@ -156,7 +161,7 @@ class PedestrianRecognition:
 
         return tracks
 
-    def bbox_draw(self, frame, bbox, color=(0, 255, 0), thickness=2):
+    def bbox_draw(self, frame, bbox, distance, color=(0, 255, 0), thickness=2):
         """Draw bounding box on the frame
         """
         x1, y1, x2, y2 = bbox
@@ -169,7 +174,7 @@ def main():
 
     frames_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/classes/')
     # frames_path = Path('D:/DATA/thesis/Videos/frames/classes/')
-    class_01 = Path(frames_path / 'walking_3')
+    class_01 = Path(frames_path / 'walking_1')
 
     pedestrian_recognition = PedestrianRecognition(data_directory=class_01)
 
