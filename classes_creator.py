@@ -5,7 +5,8 @@ import shutil
 import cv2
 import pandas as pd
 
-from project_utils import check_path, check_file, check_os_windows
+from project_utils import check_path, check_file, check_os_windows, estimate_pedestrian_distance
+
 
 class HumanActionClassCreation:
     def __init__(self, frames_data: Path, output_folder: Path):
@@ -63,10 +64,19 @@ class HumanActionClassCreation:
         index = 0
         while True:
             frame_path = color_frames[index]
+            depth_path = depth_frames[index]
             frame_path = check_os_windows(frame_path)
-            frame = cv2.imread(frame_path)
+            depth_path = check_os_windows(depth_path)
 
-            cv2.imshow('Frame viewer', frame)
+            frame = cv2.imread(frame_path)
+            depth_map = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
+            # if values from the depth map are greater than 5000, make them 0
+            depth_map[depth_map > 6000] = 0
+
+            depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_map, alpha=0.03), cv2.COLORMAP_HOT)
+            added_images = cv2.addWeighted(frame, 0.7, depth_colormap, 0.3, 0)
+
+            cv2.imshow('Frame viewer', added_images)
             key = cv2.waitKey(0) & 0xFF
             if key == 27: #ESC key
                 break
@@ -164,8 +174,8 @@ class HumanActionClassCreation:
 
 
 def main():
-    frames_data = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/navigation_data.csv')
-    output_folder = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/frames/classes/')
+    frames_data = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/navigation_data.csv')
+    output_folder = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/classes/')
 
     HumanActionClassCreation(frames_data=frames_data, output_folder=output_folder)
 

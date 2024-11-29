@@ -243,9 +243,9 @@ class RosbagManager():
 
 def main():
     rosbag_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Rosbags/2023_05_05/')
-    rosbag_name = 'Test3_12_37_C-R/2023_05_05_12_37_Gera_C-R_Alt.orig.bag'
+    rosbag_name = 'Test4_12_56_R-C/2023_05_05_12_56_Gera_R-C_Alt.orig.bag'
 
-    output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/'
+    output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/'
     bag = RosbagManager(rosbag_path, rosbag_name)
     # bag.check_bag()
     bag.extract_stereo_data(output_path)

@@ -53,7 +53,7 @@ def check_file(path_to_file):
     """
     if not os.path.exists(path_to_file):
         print(f'File {path_to_file} does not exist.')
-        raise FileNotFoundError
+        return False
     else:
 
         print(f'File {path_to_file} exists.')
