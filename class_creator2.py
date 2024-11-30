@@ -139,8 +139,10 @@ class HumanActionClassCreation:
         """
         review each pedestrian in the set of frames and labels their actions
         Args:
+            frame_data (pd.DataFrame): Dataframe with the Pedestrians data
             start_timestamp (str): Start timestamp
             end_timestamp (str): End timestamp
+            pedestrian_counter (int): Counter for the pedestrians found in each section of the dataset
         """
         pedestrian_actions = {}
         print(f"Checking pedestrian actions from {start_timestamp} to {end_timestamp}")
@@ -179,26 +181,30 @@ class HumanActionClassCreation:
 
                 depth_values_of_roi = depth_map[int(y1):int(y2), int(x1):int(x2)]
                 pedestrian_distance = estimate_pedestrian_distance(depth_values_of_roi)
+                pedestrian_image = frame[int(y1):int(y2), int(x1):int(x2)]
 
-                if pedestrian_distance > 10.0:
-                    print("Pedestrian too far away")
-                    user_check = input("Is the pedestrian too far away? (y/n): ")
-                    pedestrian_image = frame[int(y1):int(y2), int(x1):int(x2)]
-                    cv2.imshow("Pedestrian too far away", pedestrian_image)
-                    if cv2.waitKey(500) & 0xFF == ord('q'):
-                        break
-                    if user_check == 'y':
+                if confidence < 0.7:
+                    print("Confidence too low")
+                    cv2.imshow("Is this a pedestrian?", pedestrian_image)
+                    key = cv2.waitKey(0) & 0xFF
+                    if key == ord('n'):
                         cv2.destroyAllWindows()
                         continue
-                    cv2.destroyWindow("Pedestrian too far away")
+                    else:
+                        cv2.destroyAllWindows()
 
-                frame = cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                if pedestrian_distance > 10.0:
+                    print("Pedestrian a bit far away")
+                    cv2.imshow("Is pedestrian close enough?", pedestrian_image)
+                    key = cv2.waitKey(0) & 0xFF
+                    if key == ord('n'):
+                        cv2.destroyAllWindows()
+                        continue
+                    else:
+                        cv2.destroyAllWindows()
 
                 pedestrians_in_frame.append(detection_data)
 
-            cv2.imshow("Pedestrians in frame", frame)
-            if cv2.waitKey(500) & 0xFF == ord('q'):
-                break
             pedestrian_tracks = self.track_pedestrians(frame, np.array(pedestrians_in_frame, dtype="object"))
 
             for track in pedestrian_tracks:
