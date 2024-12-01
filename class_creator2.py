@@ -41,7 +41,7 @@ class HumanActionClassCreation:
 
         self.walking_counter = 0
         self.standing_still_counter = 0
-        self.pedestrian_counter = 4
+        self.pedestrian_counter = 15
 
         self.create_classes()
 
