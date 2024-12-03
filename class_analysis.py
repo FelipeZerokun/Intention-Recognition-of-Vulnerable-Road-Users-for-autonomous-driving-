@@ -104,8 +104,8 @@ class ClassAnalysis:
 
         return None
 def main():
-    dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_01/classes/'
-    class_name = 'walking/pedestrian_16/'
+    dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/classes/'
+    class_name = 'walking/pedestrian_2/'
 
     class_analysis = ClassAnalysis(dataset_dir + class_name)
     class_analysis.check_images_with_timestamp()

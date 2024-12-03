@@ -41,7 +41,8 @@ class HumanActionClassCreation:
 
         self.walking_counter = 0
         self.standing_still_counter = 0
-        self.pedestrian_counter = 15
+        self.pedestrian_counter = 2
+        self.start_timestamp = 1683283228835635385
 
         self.create_classes()
 
@@ -67,6 +68,7 @@ class HumanActionClassCreation:
         Manual creation of classes for human actions in the frames.
         """
         frame_data = self.check_correct_frames_data()
+        frame_data = frame_data.loc[frame_data['timestamp'] >= self.start_timestamp]
         color_frames = frame_data['rgb_frame'].tolist()
         depth_frames = frame_data['depth_frame'].tolist()
         timestamps = frame_data['timestamp'].tolist()
@@ -292,8 +294,8 @@ class HumanActionClassCreation:
         return tracks
 
 def main():
-    frames_data = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_01/navigation_data.csv'
-    output_folder = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_01/classes/'
+    frames_data = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/navigation_data.csv'
+    output_folder = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/classes/'
 
     HumanActionClassCreation(frames_data=frames_data, output_folder=output_folder)
 
