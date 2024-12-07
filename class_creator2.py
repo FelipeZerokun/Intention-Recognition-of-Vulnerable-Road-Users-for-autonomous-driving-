@@ -41,8 +41,8 @@ class HumanActionClassCreation:
 
         self.walking_counter = 0
         self.standing_still_counter = 0
-        self.pedestrian_counter = 2
-        self.start_timestamp = 1683283228835635385
+        self.pedestrian_counter = 169
+        self.start_timestamp = 1683285040773691684
 
         self.create_classes()
 
@@ -187,7 +187,7 @@ class HumanActionClassCreation:
 
                 if confidence < 0.7:
                     print("Confidence too low")
-                    cv2.imshow("Is this a pedestrian?", pedestrian_image)
+                    cv2.imshow(f"Is this a pedestrian? confidence: {confidence}", pedestrian_image)
                     key = cv2.waitKey(0) & 0xFF
                     if key == ord('n'):
                         cv2.destroyAllWindows()
@@ -197,7 +197,7 @@ class HumanActionClassCreation:
 
                 if pedestrian_distance > 10.0:
                     print("Pedestrian a bit far away")
-                    cv2.imshow("Is pedestrian close enough?", pedestrian_image)
+                    cv2.imshow(f"Is pedestrian close enough? distance: {pedestrian_distance}" , pedestrian_image)
                     key = cv2.waitKey(0) & 0xFF
                     if key == ord('n'):
                         cv2.destroyAllWindows()
@@ -294,8 +294,8 @@ class HumanActionClassCreation:
         return tracks
 
 def main():
-    frames_data = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/navigation_data.csv'
-    output_folder = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_03/classes/'
+    frames_data = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/navigation_data.csv'
+    output_folder = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/classes/'
 
     HumanActionClassCreation(frames_data=frames_data, output_folder=output_folder)
 
