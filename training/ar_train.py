@@ -88,5 +88,5 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 torch.save(model.state_dict(), save_path)
                 print(f"Best model saved with validation loss: {best_val_loss: .4f} at {save_path}")
 
-        print("\nTraining complete.")
-        return model, train_loss_history, val_loss_history
+    print("\nTraining complete.")
+    return model, train_loss_history, val_loss_history

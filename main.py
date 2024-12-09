@@ -7,8 +7,8 @@ from training.ar_evaluate import evaluate_model
 
 def main():
     # First, set the parameters
-    num_epochs = 10
-    batch_size = 8
+    num_epochs = 15
+    batch_size = 2
     learning_rate = 0.001
     num_classes = 2
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

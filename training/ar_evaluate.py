@@ -1,7 +1,7 @@
 import torch
 from sklearn.metrics import accuracy_score, classification_report
 
-def evaluate_model(model, data_loader, device):
+def evaluate_model(model, test_loader, device):
     """
     Evaluate the trained model on the test dataset.
 
@@ -22,7 +22,7 @@ def evaluate_model(model, data_loader, device):
 
     # Disable gradient computation during evaluation
     with torch.no_grad():
-        for inputs, labels in data_loader:
+        for inputs, labels in test_loader:
             # move inputs and labels to the same device as the model
             inputs, labels = inputs.to(device), labels.to(device)
 
