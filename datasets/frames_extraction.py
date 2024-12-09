@@ -1,4 +1,4 @@
-from project_utils import *
+from utils.project_utils import *
 import cv2
 import os
 from pathlib import Path
