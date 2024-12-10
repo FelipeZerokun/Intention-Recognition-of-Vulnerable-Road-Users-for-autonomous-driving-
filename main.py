@@ -7,12 +7,13 @@ from training.ar_evaluate import evaluate_model
 
 def main():
     # First, set the parameters
-    num_epochs = 15
-    batch_size = 2
+    num_epochs = 10
+    batch_size = 8
     learning_rate = 0.001
     num_classes = 2
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/action_recognition_dataset'
+    dataset_dir = "D:/DATA/thesis/action_recognition_dataset"
     save_model_path = 'results/action_recognition_model.pth'
 
     # Get the datasets
@@ -50,9 +51,6 @@ def main():
     )
 
     print("Evaluation metrics: ", metrics)
-
-
-    print("Using device: ", device)
 
 
 if __name__ == "__main__":

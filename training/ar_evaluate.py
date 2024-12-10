@@ -1,5 +1,9 @@
 import torch
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+import json
+import pandas as pd
 
 def evaluate_model(model, test_loader, device):
     """
@@ -35,16 +39,58 @@ def evaluate_model(model, test_loader, device):
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
-    # Calculate the accuracy
-    accuracy = accuracy_score(all_labels, all_preds)
+    # Visualize Confusion matrix and save it
+    visualize_results(all_preds, all_labels)
+    # Get the results report and save it for future references
+    save_report(all_preds, all_labels)
 
-    # Get the classification report (precision, recall, F1-score)
-    report = classification_report(all_labels, all_preds, target_names=['standing_still', 'walking'])
 
-    # Return the evaluation metrics as a dictionary
-    metrics = {
-        'accuracy': accuracy,
-        'classification_report': report
-    }
+def visualize_results(y_pred, y_labels):
+    """
+    Visualize the results of the model predictions.
 
-    return metrics
+    Args:
+        y_pred (list): List of predicted labels.
+        y_labels (list): List of true labels.
+    """
+    # Confusion matrix
+    cm = confusion_matrix(y_labels, y_pred)
+
+    # Plot and save confusion matrix
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=["Standing", "Walking"],
+                yticklabels=["Standing", "Walking"])
+    plt.ylabel('Actual')
+    plt.xlabel('Predicted')
+    plt.title("Confusion Matrix")
+    plt.savefig("results/confusion_matrix.png")
+    plt.close()
+
+def save_report(y_pred, y_labels):
+    """
+    Save the predicted results and the ground truth labels as a CSV file.
+    Then, calculate the accuracy and F1 score and save them in a JSON
+    file.
+
+    Args:
+        y_pred (list): List of predicted labels.
+        y_labels (list): List of true labels.
+    """
+
+    # Save predictions and true labels to CSV
+    results_df = pd.DataFrame({"Ground Truth": y_labels, "Predictions": y_pred})
+    results_df.to_csv("results/test_predictions.csv", index=False)
+
+    # Generate classification report
+    report = classification_report(y_labels, y_pred, target_names=["Standing", "Walking"], output_dict=True)
+
+    # Save report to a JSON file
+    with open("classification_report.json", "w") as f:
+        json.dump(report, f, indent=4)
+
+    # Log accuracy and other metrics
+    accuracy = accuracy_score(y_labels, y_pred)
+
+    with open("results/metrics_log.txt", "w") as f:
+        f.write(f"Accuracy: {accuracy:.4f}\n")
+        f.write(f"Classification Report (Saved in classification_report.json)\n")
