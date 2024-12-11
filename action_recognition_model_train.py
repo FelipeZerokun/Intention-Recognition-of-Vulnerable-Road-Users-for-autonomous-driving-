@@ -12,6 +12,7 @@ def main():
     learning_rate = 0.001
     num_classes = 2
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Training on device: {device}")
     dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/action_recognition_dataset'
     dataset_dir = "D:/DATA/thesis/action_recognition_dataset"
     save_model_path = 'results/action_recognition_model.pth'
