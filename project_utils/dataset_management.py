@@ -1,3 +1,4 @@
+import cv2
 import torch
 from torch.utils.data import random_split, DataLoader
 from torchvision import transforms
@@ -45,11 +46,3 @@ def split_dataset(dataset_dir: str, clip_lenght=16, split_ratios=(0.7, 0.15, 0.1
     )
 
     return train_dataset, val_dataset, test_dataset
-
-if __name__ == '__main__':
-    dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/action_recognition_dataset'
-    train, val, test = split_dataset(dataset_dir)
-
-    print(f"Training set size: {len(train)}")
-    print(f"Validation set size: {len(val)}")
-    print(f"Test set size: {len(test)}")

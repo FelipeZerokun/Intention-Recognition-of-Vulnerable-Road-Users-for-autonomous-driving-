@@ -89,7 +89,7 @@ def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     # This is done to avoid considering the background
     center_x = depth_image.shape[1] // 2
     center_y = depth_image.shape[0] // 2
-    mean_depth_around_center = np.mean(depth_image[center_y-2:center_y+3, center_x-2:center_x+3])
+    mean_depth_around_center = np.mean(depth_image[center_y-10:center_y+11, center_x-10:center_x+11])
 
     # print(f"Comparing methods to obtain the distance")
     # print(f"First with regular mean: {mean_depth*depth_scale}")

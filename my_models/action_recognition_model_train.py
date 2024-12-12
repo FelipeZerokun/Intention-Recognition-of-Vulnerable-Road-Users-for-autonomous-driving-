@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
-from models.action_recognition_model import get_i3d_model
+from my_models.action_recognition_model import get_i3d_model
 from training.ar_train import train_model
-from utils import data_split
+from project_utils.dataset_management import split_dataset
 from training.ar_evaluate import evaluate_model
 
 def main():
@@ -15,10 +15,10 @@ def main():
     print(f"Training on device: {device}")
     dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/action_recognition_dataset'
     dataset_dir = "D:/DATA/thesis/action_recognition_dataset"
-    save_model_path = 'results/action_recognition_model.pth'
+    save_model_path = '../results/action_recognition_model.pth'
 
     # Get the datasets
-    train_dataset, val_dataset, test_dataset = data_split.split_dataset(dataset_dir)
+    train_dataset, val_dataset, test_dataset = split_dataset(dataset_dir)
 
     # Data Loaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
