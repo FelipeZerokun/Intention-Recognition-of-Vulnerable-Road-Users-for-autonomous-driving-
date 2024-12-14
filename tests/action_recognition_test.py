@@ -1,7 +1,6 @@
 import os
 import cv2
 import torch
-from torchvision import transforms
 
 from project_utils.pedestrian_tracking import PedestrianTracker
 from project_utils.pedestrian_detection import PedestrianDetector

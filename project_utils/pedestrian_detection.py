@@ -1,9 +1,5 @@
-from pathlib import Path
 
-import cv2
-import pandas as pd
 import torch
-import numpy as np
 
 from project_utils.project_utils import estimate_pedestrian_distance
 

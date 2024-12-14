@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 import os
-from project_utils import check_path, check_file, check_os_windows
+from project_utils.project_utils import check_path, check_file, check_os_windows
 
 class ClassModifier:
 

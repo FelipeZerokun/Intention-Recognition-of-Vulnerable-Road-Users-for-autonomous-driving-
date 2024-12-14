@@ -1,6 +1,4 @@
 from pathlib import Path
-import os
-import shutil
 
 import cv2
 import pandas as pd
@@ -8,7 +6,7 @@ import numpy as np
 import torch
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
-from project_utils import check_path, check_file, check_os_windows, estimate_pedestrian_distance
+from project_utils.project_utils import check_path, check_file, check_os_windows, estimate_pedestrian_distance
 
 
 class HumanActionClassCreation:
@@ -42,7 +40,7 @@ class HumanActionClassCreation:
         self.walking_counter = 0
         self.standing_still_counter = 0
         self.pedestrian_counter = 169
-        self.start_timestamp = 1683285040773691684
+        self.start_timestamp = 0
 
         self.create_classes()
 

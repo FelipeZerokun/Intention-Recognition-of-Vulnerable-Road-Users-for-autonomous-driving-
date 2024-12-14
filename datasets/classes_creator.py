@@ -1,11 +1,10 @@
 from pathlib import Path
-import os
 import shutil
 
 import cv2
 import pandas as pd
 
-from project_utils import check_path, check_file, check_os_windows, estimate_pedestrian_distance
+from project_utils.project_utils import check_path, check_file, check_os_windows, estimate_pedestrian_distance
 
 
 class HumanActionClassCreation:
