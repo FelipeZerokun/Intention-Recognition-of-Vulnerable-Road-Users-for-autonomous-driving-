@@ -96,5 +96,22 @@ def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     # print(f"Second with mean around center: {mean_depth_around_center*depth_scale}")
     return mean_depth_around_center * depth_scale
 
+def estimate_pedestrian_speed(distance, time_interval, robot_speed):
+    """Estimate the pedestrian speed
+
+    Args:
+        distance (float): Distance to the pedestrian
+        time_interval (float): Time interval between frames
+        robot_speed (float): Robot speed
+
+    Returns:
+        float: Estimated pedestrian speed
+    """
+    pedestrian_speed = (distance / time_interval)
+
+    final_speed = pedestrian_speed + robot_speed
+
+
+    return pedestrian_speed
 def save_checkpoint(model, path):
     torch.save(model.state_dict(), path)

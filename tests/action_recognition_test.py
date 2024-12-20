@@ -10,7 +10,7 @@ from my_models.action_recognition_model import ActionRecognitionModel
 
 
 def main():
-    video_dir = "D:/DATA/thesis/Videos/video_04"
+    video_dir = "D:/DATA/thesis/Videos/video_02"
     check_path(video_dir)
     model_dir = "../results/action_recognition_model.pth"
     if not check_file(model_dir):
@@ -60,8 +60,6 @@ def main():
             cv2.imshow("Action Recognition", color_frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-
 
 
 if __name__ == "__main__":
