@@ -1,5 +1,5 @@
 import os
-
+import shutil
 import pandas as pd
 import cv2
 from project_utils.project_utils import check_path, check_os_windows
@@ -50,15 +50,23 @@ class IntentPredictionDataset:
     def _action_number_dirs(self):
         for action in os.listdir(self.actions_dir):
             action_dir = os.path.join(self.actions_dir, action)
+            intent_action_dir = os.path.join(action_dir, 'intent')
+            no_intent_action_dir = os.path.join(action_dir, 'no_intent')
+            check_path(intent_action_dir, create=True)
+            check_path(no_intent_action_dir, create=True)
             for action_number in os.listdir(action_dir):
-                yield os.path.join(action_dir, action_number)
+                yield os.path.join(action_dir, action_number), intent_action_dir, no_intent_action_dir
 
     def annotate_intention(self):
-        for action_number_dir in self._action_number_dirs():
+        for action_number_dir, intent_dir, no_intent_dir in self._action_number_dirs():
             files_in_action_folder = os.listdir(action_number_dir)
             action = action_number_dir.split('/')[-2]
             pedestrian = action_number_dir.split('/')[-1]
+            check_intent = False
             print(f"annotating for action {action} for pedestrian {pedestrian}")
+            skip = input("Would you like to SKIP this pedestrian? (y/n): ").lower()
+            if skip == 'y':
+                continue
             # Perform labeling here
             for file in files_in_action_folder:
                 if file.endswith('.csv'):
@@ -77,29 +85,57 @@ class IntentPredictionDataset:
                         intent = 'walk'
 
             self._watch_frames(frame_data)
-            intent_from_user = input("Did the pedestrian intents to change their action? (y/n): ").lower()
-            if intent_from_user == 'y':
-                if action == 'walking':
-                    intent_label = 'stop_walking'
-                    intent = 1
-                elif action == 'standing_still':
-                    intent_label = 'start_walking'
-                    intent = 1
+            while not check_intent:
+                intent_from_user = input("Did the pedestrian intents to change their action? (y/n): ").lower()
+                if intent_from_user == 'y':
+                    if action == 'walking':
+                        intent_label = 'stop_walking'
+                        intent = 1
+                        check_intent = True
+                        for file in files_in_action_folder:
+                            if file.endswith('.png'):
+                                shutil.move(os.path.join(action_number_dir, file), os.path.join(no_intent_dir, file))
 
-            elif intent_from_user == 'n':
-                if action == 'walking':
-                    intent_label = 'continue_walking'
-                    intent = 0
-                elif action == 'standing_still':
-                    intent_label = 'continue_standing_still'
-                    intent = 0
+                    elif action == 'standing_still':
+                        intent_label = 'start_walking'
+                        intent = 1
+                        check_intent = True
+                        for file in files_in_action_folder:
+                            if file.endswith('.png'):
+                                shutil.move(os.path.join(action_number_dir, file), os.path.join(intent_dir, file))
+
+                elif intent_from_user == 'n':
+                    if action == 'walking':
+                        intent_label = 'continue_walking'
+                        intent = 0
+                        check_intent = True
+                        if file.endswith('.png'):
+                            shutil.move(os.path.join(action_number_dir, file), os.path.join(no_intent_dir, file))
+
+                    elif action == 'standing_still':
+                        intent_label = 'continue_standing_still'
+                        intent = 0
+                        check_intent = True
+                        if file.endswith('.png'):
+                            shutil.move(os.path.join(action_number_dir, file), os.path.join(no_intent_dir, file))
+
+                else:
+                    print("Invalid input. Please enter 'y' or 'n'")
+
+
 
             # Add intent_label and intent as new colums to the frame_data
             frame_data['intent_label'] = intent_label
             frame_data['intent'] = intent
 
             # Save the new frame_data
-            frame_data.to_csv(os.path.join(action_number_dir, 'intention_data.csv'), index=False)
+            if intent == 0:
+                file_name = os.path.join(intent_dir, "intent_data_" + pedestrian + ".csv")
+
+            elif intent == 1:
+                file_name = os.path.join(intent_dir, "intent_data_" + pedestrian + ".csv")
+
+            frame_data.to_csv(os.path.join(file_name), index=False)
 
     def _watch_frames(self, frame_data):
         timestamps = list(frame_data['timestamp'])
@@ -125,7 +161,7 @@ class IntentPredictionDataset:
 
             cv2.imshow('Frame viewer', frame)
             key = cv2.waitKey(0) & 0xFF
-            if key == 27:  # ESC key
+            if key == ord('r'):
                 break
 
             if key == ord('a'):
@@ -143,6 +179,7 @@ class IntentPredictionDataset:
                 else:
                     index += 1
                     continue
+
 
     def _look_for_correct_video(self, first_frame, last_frame):
         video_01_path = os.path.join(self.frames_data_dir, 'video_01/navigation_data.csv')
