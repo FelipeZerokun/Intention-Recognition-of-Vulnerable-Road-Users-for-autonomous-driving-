@@ -67,7 +67,8 @@ class IntentPredictionDataset:
             skip = input("Would you like to SKIP this pedestrian? (y/n): ").lower()
             if skip == 'y':
                 continue
-            # Perform labeling here
+
+            # Lets the user see the pedestrian performing the action
             for file in files_in_action_folder:
                 if file.endswith('.csv'):
                     frame_data = pd.read_csv(os.path.join(action_number_dir, file))
@@ -80,49 +81,25 @@ class IntentPredictionDataset:
                         break
                     if key == ord('d'):
                         continue
-
-                    if key == ord('w'):
-                        intent = 'walk'
-
+            # Lets the user see the whole video from the start point of the action
             self._watch_frames(frame_data)
+
+            # After the user has seen the pedestrian performing the action, ask if the pedestrian intents to change their action
             while not check_intent:
                 intent_from_user = input("Did the pedestrian intents to change their action? (y/n): ").lower()
-                if intent_from_user == 'y':
-                    if action == 'walking':
-                        intent_label = 'stop_walking'
-                        intent = 1
-                        check_intent = True
-                        for file in files_in_action_folder:
-                            if file.endswith('.png'):
-                                shutil.move(os.path.join(action_number_dir, file), os.path.join(no_intent_dir, file))
 
-                    elif action == 'standing_still':
-                        intent_label = 'start_walking'
-                        intent = 1
-                        check_intent = True
-                        for file in files_in_action_folder:
-                            if file.endswith('.png'):
-                                shutil.move(os.path.join(action_number_dir, file), os.path.join(intent_dir, file))
+                if intent_from_user == 'y':
+                    intent = 1
+                    check_intent = True
+                    intent_label = self._move_frame_to_new_folder(intent, action, pedestrian, intent_dir)
 
                 elif intent_from_user == 'n':
-                    if action == 'walking':
-                        intent_label = 'continue_walking'
-                        intent = 0
-                        check_intent = True
-                        if file.endswith('.png'):
-                            shutil.move(os.path.join(action_number_dir, file), os.path.join(no_intent_dir, file))
-
-                    elif action == 'standing_still':
-                        intent_label = 'continue_standing_still'
-                        intent = 0
-                        check_intent = True
-                        if file.endswith('.png'):
-                            shutil.move(os.path.join(action_number_dir, file), os.path.join(no_intent_dir, file))
+                    intent = 0
+                    check_intent = True
+                    intent_label = self._move_frame_to_new_folder(intent, action, pedestrian, no_intent_dir)
 
                 else:
                     print("Invalid input. Please enter 'y' or 'n'")
-
-
 
             # Add intent_label and intent as new colums to the frame_data
             frame_data['intent_label'] = intent_label
@@ -130,12 +107,12 @@ class IntentPredictionDataset:
 
             # Save the new frame_data
             if intent == 0:
-                file_name = os.path.join(intent_dir, "intent_data_" + pedestrian + ".csv")
+                file_name = os.path.join(no_intent_dir, pedestrian, "intent_data_" + pedestrian + ".csv")
 
             elif intent == 1:
-                file_name = os.path.join(intent_dir, "intent_data_" + pedestrian + ".csv")
+                file_name = os.path.join(intent_dir, pedestrian, "intent_data_" + pedestrian + ".csv")
 
-            frame_data.to_csv(os.path.join(file_name), index=False)
+            frame_data.to_csv(file_name, index=False)
 
     def _watch_frames(self, frame_data):
         timestamps = list(frame_data['timestamp'])
@@ -197,6 +174,42 @@ class IntentPredictionDataset:
             if first_frame in timestamps and last_frame in timestamps:
                 # Return all the rows that are between the first and last frame
                 return frames_data[(frames_data['timestamp'] >= first_frame)]
+
+    def _move_frame_to_new_folder(self, intent, action, pedestrian, save_dir):
+        _saving_dir = os.path.join(save_dir, pedestrian)
+        _images_original_dir = os.path.join(self.actions_dir, action, pedestrian)
+        # Create the new directory for moving the images
+        check_path(_saving_dir, create=True)
+
+        if intent == 1:
+            if action == 'walk':
+                intent_label = 'stop_walking'
+                print(f"Moving frames from {_images_original_dir} to {_saving_dir}")
+                for file in os.listdir(_images_original_dir):
+                    shutil.move(os.path.join(_images_original_dir, file), _saving_dir)
+
+            elif action == 'standing_still':
+                intent_label = 'start_walking'
+                print(f"Moving frames from {_images_original_dir} to {_saving_dir}")
+                for file in os.listdir(_images_original_dir):
+                    shutil.move(os.path.join(_images_original_dir, file), _saving_dir)
+            
+        elif intent == 0:
+            _saving_dir = os.path.join(self.actions_dir, action, pedestrian, 'intent')
+            if action == 'walk':
+                intent_label = 'continue_walking'
+                print(f"Moving frames from {_images_original_dir} to {_saving_dir}")
+                for file in os.listdir(_images_original_dir):
+                    shutil.move(os.path.join(_images_original_dir, file), _saving_dir)
+                
+            elif action == 'standing_still':
+                intent_label = 'continue_standing_still'
+                print(f"Moving frames from {_images_original_dir} to {_saving_dir}")
+                for file in os.listdir(_images_original_dir):
+                    shutil.move(os.path.join(_images_original_dir, file), _saving_dir)
+
+
+        return intent_label
 
 def main():
     frames_data_dir = '/media/felipezero/T7 Shield/DATA/thesis/Videos/'
