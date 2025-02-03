@@ -8,7 +8,7 @@ from project_utils.project_utils import check_path, check_file, check_os_windows
 
 
 class HumanActionClassCreation:
-    def __init__(self, frames_data: Path, output_folder: Path):
+    def __init__(self, frames_data: Path, output_folder: Path, check_intention: False):
         """
         Class to create a dataset with human actions from several frames extracted from a video file.
 
@@ -17,14 +17,14 @@ class HumanActionClassCreation:
 
         """
         self._DATA_COLUMNS = ['timestamp', 'Robot odometry', 'rgb_frame', 'depth_frame']
+        self.check_intention = check_intention
         self.frames_data = check_os_windows(frames_data)
         check_file(self.frames_data)
 
-        self.output_folder = output_folder
+        self.output_folder = check_os_windows(output_folder)
         check_path(folder_path=self.output_folder, create=True)
 
-        self.walking_counter = 0
-        self.standing_still_counter = 0
+        self.action_counter = 0
 
         self.create_classes()
 
@@ -81,7 +81,7 @@ class HumanActionClassCreation:
                 break
 
             if key == ord('w'):
-                if not walking:
+                if not walking and not standing_still:
                     walking = True
                     start_timestamp = timestamps[index]
                     print(f'Start walking at {start_timestamp}')
@@ -90,18 +90,29 @@ class HumanActionClassCreation:
                 if walking:
                     walking = False
                     end_timestamp = timestamps[index]
-                    print(f'End walking at {end_timestamp}')
+                    print(f'Person Walking is still walking at {end_timestamp}')
 
                     if start_timestamp >= end_timestamp:
                         print('End timestamp must be greater than start timestamp.')
                         continue
                     else:
+                        self.action_counter += 1
+                        self.save_frames(start_timestamp, end_timestamp, 'walking', 0, self.action_counter)
 
-                        self.walking_counter += 1
-                        self.save_frames(start_timestamp, end_timestamp, 'walking', self.walking_counter)
+                if standing_still:
+                    standing_still = False
+                    end_timestamp = timestamps[index]
+                    print(f'Person Standing Still started walking at {end_timestamp}')
+
+                    if start_timestamp >= end_timestamp:
+                        print('End timestamp must be greater than start timestamp.')
+                        continue
+                    else:
+                        self.action_counter += 1
+                        self.save_frames(start_timestamp, end_timestamp, 'standing_still', 1, self.action_counter)
 
             if key == ord('s'):
-                if not standing_still:
+                if not standing_still and not walking:
                     standing_still = True
                     start_timestamp = timestamps[index]
                     print(f'Start standing still at {start_timestamp}')
@@ -110,14 +121,26 @@ class HumanActionClassCreation:
                 if standing_still:
                     standing_still = False
                     end_timestamp = timestamps[index]
-                    print(f'End standing still at {end_timestamp}')
+                    print(f'Person Standing Still is still standing still at {end_timestamp}')
 
                     if start_timestamp >= end_timestamp:
                         print('End timestamp must be greater than start timestamp.')
                         continue
                     else:
-                        self.standing_still_counter += 1
-                        self.save_frames(start_timestamp, end_timestamp, 'standing_still', self.standing_still_counter)
+                        self.action_counter += 1
+                        self.save_frames(start_timestamp, end_timestamp, 'standing_still', 0, self.action_counter)
+
+                if walking:
+                    walking = False
+                    end_timestamp = timestamps[index]
+                    print(f'Person Walking is standing still at {end_timestamp}')
+
+                    if start_timestamp >= end_timestamp:
+                        print('End timestamp must be greater than start timestamp.')
+                        continue
+                    else:
+                        self.action_counter += 1
+                        self.save_frames(start_timestamp, end_timestamp, 'walking', 1, self.action_counter)
 
             if key == ord('a'):
                 if index == 0:
@@ -140,7 +163,7 @@ class HumanActionClassCreation:
 
         cv2.destroyAllWindows()
 
-    def save_frames(self, start_timestamp, end_timestamp, action, action_counter):
+    def save_frames(self, start_timestamp, end_timestamp, action, intent, action_counter):
         """
         Save the frames from the start timestamp to the end timestamp in a folder.
 
@@ -151,19 +174,37 @@ class HumanActionClassCreation:
         """
         print(f"Saving frames from {start_timestamp} to {end_timestamp} for action {action} number {action_counter}")
 
-        action_folder = self.output_folder / f"{action}_{action_counter}"
+        if self.check_intention:
+            if intent == 0:
+                class_name = f"{action}_no_intent"
+            elif intent == 1:
+                class_name = f"{action}_with_intent"
+            action_folder = self.output_folder / class_name / f"{action}_{action_counter}"
+        else:
+            action_folder = self.output_folder / f"{action}_{action_counter}"
+
         action_folder.mkdir(parents=True, exist_ok=True)
 
         frame_data = self.check_correct_frames_data()
-        frames_to_save = frame_data[(frame_data['timestamp'] >= start_timestamp) & (frame_data['timestamp'] <= end_timestamp)]
-        frames_to_save.loc[:,'action'] = action
+        frames_to_save = frame_data[(frame_data['timestamp'] >= start_timestamp) & (frame_data['timestamp'] <= end_timestamp)].copy()
+
+        # Explicitly cast the 'action' column to string dtype
+        frames_to_save.loc['action'] = frames_to_save['action'].astype(str)
+        frames_to_save.loc[:, 'action'] = action # or any default value
+
+        if 'intent' not in frames_to_save.columns:
+            frames_to_save.loc[:,'intent'] = 0 # or any default value
+
+        # Explicitly cast the 'intent' column to integer dtype
+        frames_to_save.loc['intent'] = frames_to_save['intent'].astype(int)
+        frames_to_save.loc[:, 'intent'] = intent
 
         csv_output_path = action_folder / f"{action}_{action_counter}.csv"
         frames_to_save.to_csv(csv_output_path, index=False)
 
         for _, row in frames_to_save.iterrows():
-            color_frame_path = Path(row['rgb_frame'])
-            depth_frame_path = Path(row['depth_frame'])
+            color_frame_path = check_os_windows(row['rgb_frame'])
+            depth_frame_path = check_os_windows(row['depth_frame'])
             if color_frame_path.exists() and depth_frame_path.exists():
                 shutil.copy(color_frame_path, action_folder / color_frame_path.name)
                 shutil.copy(depth_frame_path, action_folder / depth_frame_path.name)
@@ -173,10 +214,10 @@ class HumanActionClassCreation:
 
 
 def main():
-    frames_data = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/navigation_data.csv')
-    output_folder = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/classes/')
+    frames_data = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_01/navigation_data.csv')
+    output_folder = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/classes_01/')
 
-    HumanActionClassCreation(frames_data=frames_data, output_folder=output_folder)
+    HumanActionClassCreation(frames_data=frames_data, output_folder=output_folder, check_intention = True)
 
 
 if __name__ == '__main__':
