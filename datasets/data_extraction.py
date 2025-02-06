@@ -94,16 +94,17 @@ def get_color_image(img_msg):
     return frame
 
 
-def get_depth_image(depth_msg):
+def get_depth_image(depth_msg, fix_frame=True):
     """Convert ROS depth image message to OpenCV image with a colormap
 
     """
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
-    fixed_image = convert_depth2image(frame)
 
-    return fixed_image
+    if fix_frame:
+        frame = convert_depth2image(frame)
 
+    return frame
 
 def convert_depth2image(depth_array):
     """Convert depth array to OpenCV image
