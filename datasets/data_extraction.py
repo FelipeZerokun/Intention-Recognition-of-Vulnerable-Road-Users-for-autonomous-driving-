@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
 
-import open3d as o3d
+# import open3d as o3d
 
 import sensor_msgs.point_cloud2 as pc2
 
-from scipy.spatial.transform import Rotation as R
+# from scipy.spatial.transform import Rotation as R
 
 
 def get_camera_info(camera_info_msg):

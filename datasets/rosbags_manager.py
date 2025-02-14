@@ -1,14 +1,15 @@
-from project_utils import check_path, save_image_file
+from project_utils.project_utils import check_path, save_image_file
 
 import rosbag
 from pathlib import Path
 
-import numpy as np
-import cv2
 import pandas as pd
 from data_extraction import *
 
 import logging
+import subprocess
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class RosbagManager():
@@ -26,6 +27,7 @@ class RosbagManager():
     _local_vel_topic = '/anavs/solution/vel'
 
     _odom_topic = '/RosAria/pose'
+    _estimated_speed = '/anavs/solution/vel'
 
     _gnss_topics = [_ned_pos_topic,
                    _global_pos_topic,
@@ -44,13 +46,28 @@ class RosbagManager():
         self.bag = None
 
     def _open_bag(self):
-        self.bag = rosbag.Bag(self.file, 'r')
+        self.bag = rosbag.Bag(self.file, 'r', skip_index=True)
         print("Rosbag opened successfully")
         logging.info('Rosbag opened successfully.')
 
     def _close_bag(self):
         self.bag.close()
         logging.info('Rosbag closed successfully.')
+
+    def reindex_bag(self):
+        try:
+            logging.info(f'Reindexing rosbag {self.name}')
+            print("Reindexing rosbag")
+            result = subprocess.run(['rosbag', 'reindex', self.file], capture_output=True, text=True)
+            logging.info(result.stdout)
+
+
+            if result.stderr:
+                logging.warning(result.stderr)
+
+            logging.info(f'Rosbag {self.name} reindexed successfully.')
+        except Exception as e:
+            logging.warning(f'Error while reindexing rosbag {self.name}: {e}')
 
     def check_bag(self):
         try:
@@ -242,13 +259,14 @@ class RosbagManager():
 
 
 def main():
-    rosbag_path = Path('/media/felipezero/T7 Shield/DATA/thesis/Rosbags/2023_05_05/')
-    rosbag_name = 'Test4_12_56_R-C/2023_05_05_12_56_Gera_R-C_Alt.orig.bag'
-
-    output_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/'
+    rosbag_path = '/internal/rosbags/'
+    rosbag_name = '2023_05_04_09_44_Gera_C-R_Alt.bag'
+    output_path = '/internal/rosbags/extracted_data/'
+    print("Extracting data from", rosbag_name)
     bag = RosbagManager(rosbag_path, rosbag_name)
-    # bag.check_bag()
-    bag.extract_stereo_data(output_path)
+    # bag.reindex_bag() # If the Rosbag only finished with .bag and not with .orig.bag
+    bag.check_bag()
+    # bag.extract_stereo_data(output_path)
 
 
 
