@@ -4,7 +4,7 @@ import rosbag
 from pathlib import Path
 
 import pandas as pd
-from data_extraction.data_extraction import *
+from data_extraction import *
 
 import logging
 import subprocess
@@ -98,7 +98,7 @@ class RosbagManager():
         finally:
             self._close_bag()
 
-    def extract_stereo_data(self, output_dir: str):
+    def extract_all_data(self, output_dir: str):
         """
         Extract stereo data from the rosbag.
         """
@@ -213,6 +213,93 @@ class RosbagManager():
 
 
         except Exception as e:
+            print(f'Error while extracting data from rosbag {self.name}: {e}')
+
+        finally:
+            print("closing rosbag")
+            cv2.destroyAllWindows()
+            self._close_bag()
+
+    def extract_stereo_data(self, output_dir: str):
+        """
+        Extract stereo data from the rosbag.
+        """
+        frames_to_skip = 1
+        show_info = True
+        depth_map_check = False
+        stereo_image_check = False
+        t_image = 0
+        t_depth = 0
+        pointcloud = None
+
+        try:
+            self._open_bag()
+            check_path(output_dir, create=True)
+            navigation_data = {
+                "timestamp": [],
+                "rgb_frame": [],
+                "depth_frame": [],
+                "action": []
+            }
+
+            for topic, msg, t in self.bag.read_messages(topics=self._topics):
+                if show_info:
+                    if topic == self._stereo_info:
+                        frames_to_skip -= 1
+                        if frames_to_skip == 0:
+                            print(f'Stereo camera info: {msg}')
+                            image_height = msg.height
+                            image_width = msg.width
+                            intrinsic_camera_matrix = np.array(msg.K).reshape(3,3) # 3x3 matrix
+                            distortion_parameters = np.array(msg.D)
+                            rotation_params = np.array(msg.R).reshape(3,3) # 3x3 matrix
+                            projection_matrix = np.array(msg.P).reshape(3,4) # 3x4 matrix
+
+                            # Initialize the variables for the robot position
+                            x_pos = y_pos = z_pos = 0
+                            lat = long = height = 0
+                            ecef_x = ecef_y = ecef_z = 0
+                            vel_x = vel_y = vel_z = 0
+
+                            show_info = False
+                else:
+
+                    if topic == self._depth_image:
+                        depth_image = get_depth_image(msg)
+                        depth_map_check = True
+
+                    elif topic == self._stereo_image:
+                        # Extract frame
+                        frame = get_color_image(msg)
+                        timestamp = t.to_nsec()
+                        stereo_image_check = True
+
+                    if depth_map_check and stereo_image_check:
+                        # visualize_data(frame, depth_image)
+
+                        color_file_name = output_dir + f'{timestamp}_rgb_frame.png'
+                        depth_file_name = output_dir + f'{timestamp}_depth_frame.png'
+
+                        save_image_file(frame, color_file_name)
+                        save_image_file(depth_image, depth_file_name, depth=True)
+
+                        navigation_data["timestamp"].append(timestamp)
+                        navigation_data["rgb_frame"].append(color_file_name)
+                        navigation_data["depth_frame"].append(depth_file_name)
+                        navigation_data["action"].append("")
+
+                        depth_map_check = stereo_image_check = False
+
+            # Write the data into a CSV file
+            nav_data_df = pd.DataFrame(navigation_data)
+            csv_file_name = output_dir + 'navigation_data.csv'
+
+            nav_data_df.to_csv(csv_file_name, index=False)
+
+            print("Data extracted successfully.")
+
+
+        except Exception as e:
             print(f'Error while extracting stereo images from rosbag {self.name}: {e}')
 
         finally:
@@ -235,9 +322,9 @@ class RosbagManager():
 
                 if video_writer is None:
                     # Initialize the video writer with the first frame's properties
-                    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                    fourcc = cv2.VideoWriter_fourcc(*'X264')  # Use X264 codec for MP4 format
                     fps = 30
-                    output_path = Path(self.path, self.name.replace('.bag', '.avi'))
+                    output_path = Path(self.path, self.name.replace('.bag', '.mp4'))
                     video_writer = cv2.VideoWriter(str(output_path), fourcc, fps, (msg.width, msg.height))
 
                 # Write frame to video
@@ -264,9 +351,10 @@ def main():
     output_path = '/internal/rosbags/extracted_data/'
     print("Extracting data from", rosbag_name)
     bag = RosbagManager(rosbag_path, rosbag_name)
-    # bag.reindex_bag() # If the Rosbag only finished with .bag and not with .orig.bag
+    bag.extract_video()
+
     bag.check_bag()
-    # bag.extract_stereo_data(output_path)
+    # bag.extract_all_data(output_path)
 
 
 
