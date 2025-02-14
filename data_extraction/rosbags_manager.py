@@ -4,7 +4,7 @@ import rosbag
 from pathlib import Path
 
 import pandas as pd
-from data_extraction import *
+from data_extraction.data_extraction import *
 
 import logging
 import subprocess
