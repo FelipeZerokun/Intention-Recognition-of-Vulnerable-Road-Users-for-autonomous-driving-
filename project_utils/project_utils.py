@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import pandas as pd
 from pathlib import Path
 import torch
 
@@ -15,7 +16,7 @@ def check_os_windows(data_dir: str):
     """
     if os.name == 'nt':
         data_dir = str(data_dir).replace('\\', '/')
-        data_dir = data_dir.replace('/media/felipezero/T7 Shield/', 'D:/')
+        data_dir = data_dir.replace('/media/felipezero/T7 Shield/', 'E:/')
         return Path(data_dir)
     else:
         return data_dir
@@ -72,6 +73,40 @@ def save_image_file(image, image_path, depth=False):
 
     else:
         cv2.imwrite(image_path, image)
+
+def save_csv_file(data, file_name, output_dir, create=True):
+    """Save data to a CSV file
+
+    Args:
+        data (dict or pd.DataFrame): Data to save or to append
+
+    """
+
+    action = data['action']
+    intent = data['intent']
+    track_id = data['track_id']
+    pedestrian_dir = os.path.join(output_dir, f'{action}_{intent}/pedestrian_{track_id}/')
+
+    if create:
+        check_path(folder_path=pedestrian_dir, create=True)
+
+        pedestrian_data_df = pd.DataFrame([data])
+        pedestrian_data_df.to_csv(os.path.join(pedestrian_dir, f'pedestrian_{track_id}.csv'), index=False)
+        pedestrian_data_df.to_csv(file_name, index=False)
+
+        print(f"Data from pedestrian {track_id} saved successfully in the directory {pedestrian_dir}.")
+
+    else:
+        pedestrian_file_path = os.path.join(pedestrian_dir, f'pedestrian_{track_id}.csv')
+        check_path(folder_path=pedestrian_file_path, create=False)
+
+        pedestrian_data_df = pd.read_csv(pedestrian_file_path)
+        pedestrian_data_df = pd.concat([pedestrian_data_df, pd.DataFrame([data])], ignore_index=True)
+        pedestrian_data_df.to_csv(pedestrian_file_path, index=False)
+        pedestrian_data_df.to_csv(file_name, index=False)
+
+    return pedestrian_dir
+
 def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     """Restore the depth values to their original range
 
@@ -96,6 +131,31 @@ def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     # print(f"Second with mean around center: {mean_depth_around_center*depth_scale}")
     return mean_depth_around_center * depth_scale
 
+def estimate_pedestrian_position(bbox, pedestrian_distance, intrinsic_matrix):
+    """Estimate the pedestrian position in 3D space using the intrinsic matrix of the camera.
+    Args:
+        bbox (tuple): Bounding box coordinates (x1, y1, x2, y2)
+        pedestrian_distance (float): Estimated distance to the pedestrian
+        intrinsic_matrix (np.array): Intrinsic matrix of the camera
+    Returns:
+        tuple: Estimated 3D position of the pedestrian (X, Y, Z)
+    """
+    fx = intrinsic_matrix[0, 0] # focal length
+    fy = intrinsic_matrix[1, 1]
+    cx = intrinsic_matrix[0, 2] # optical center
+    cy = intrinsic_matrix[1, 2]
+
+    # Get the center of the bounding box
+    u = (bbox[0] + bbox[2]) // 2
+    v = (bbox[1] + bbox[3]) // 2
+
+    # Convert to 3D coordinates
+    X = (u - cx) * pedestrian_distance / fx
+    Y = (v - cy) * pedestrian_distance / fy
+
+    return [X, Y, pedestrian_distance]
+
+
 def estimate_pedestrian_speed(distance, time_interval, robot_speed):
     """Estimate the pedestrian speed
 
@@ -113,5 +173,6 @@ def estimate_pedestrian_speed(distance, time_interval, robot_speed):
 
 
     return pedestrian_speed
+
 def save_checkpoint(model, path):
     torch.save(model.state_dict(), path)
