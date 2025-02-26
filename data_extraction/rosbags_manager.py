@@ -169,7 +169,7 @@ class RosbagManager():
                         vel_x, vel_y, vel_z = get_velocity(msg)
 
                     elif topic == self._depth_image:
-                        depth_image = get_depth_image(msg)
+                        depth_image = get_depth_image(msg, fix_frame=False)
                         depth_map_check = True
 
                     elif topic == self._stereo_image:
@@ -347,16 +347,14 @@ class RosbagManager():
 
 def main():
     rosbag_path = '/internal/rosbags/'
-    rosbag_name = '2023_05_04_09_44_Gera_C-R_Alt.bag'
-    output_path = '/internal/rosbags/extracted_data/'
+    rosbag_name = '2023_05_05/video_01/2023_05_05_10_14_Gera_C-R_Alt.orig.bag'
+    output_path = '/internal/rosbags/extracted_data/video_01/'
     print("Extracting data from", rosbag_name)
     bag = RosbagManager(rosbag_path, rosbag_name)
-    bag.extract_video()
+    # bag.extract_video()
 
     bag.check_bag()
-    # bag.extract_all_data(output_path)
-
-
+    bag.extract_all_data(output_path)
 
 
 if __name__ == '__main__':
