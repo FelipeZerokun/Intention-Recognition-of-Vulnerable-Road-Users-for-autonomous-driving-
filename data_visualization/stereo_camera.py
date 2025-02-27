@@ -77,7 +77,6 @@ class StereocameraVisualizer:
 
         index = 0
         while True:
-            timestamp = self.timestamps[index]
             frame_path = self.color_frames[index]
             depth_path = self.depth_frames[index]
             frame_path = check_os_windows(frame_path)
@@ -104,7 +103,7 @@ class StereocameraVisualizer:
                     continue
 
             if key == ord('d'):
-                if index == len(color_frames) - 1:
+                if index == len(self.color_frames) - 1:
                     print('Already at the last frame.')
                     continue
                 else:
