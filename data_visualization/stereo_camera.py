@@ -1,7 +1,6 @@
 import cv2
 import pandas as pd
 import numpy as np
-from project_utils.project_utils import check_os_windows
 
 class StereocameraVisualizer:
     """
@@ -11,9 +10,10 @@ class StereocameraVisualizer:
         video_csv_data (str): Path to the directory of the video data file.
         camera_info_dir (str): Path to the camera info file.
     """
-    def __init__(self, video_csv_data: str, camera_info_dir: str):
-        self.frame_data_dir = video_csv_data
-        self.camera_info_dir = camera_info_dir
+    def __init__(self, video_data_dir):
+        self.frame_data_dir = video_data_dir + 'navigation_data.csv'
+        self.camera_info_dir = video_data_dir + 'camera_info.csv'
+        self.data_dir = video_data_dir[:-9]
 
         self.image_size, self.intrinsic_matrix = self.get_camera_info()
 
@@ -24,7 +24,7 @@ class StereocameraVisualizer:
         """
         Get the camera info from the CSV file.
         """
-        camera_info = pd.read_csv(self.camera_info)
+        camera_info = pd.read_csv(self.camera_info_dir)
         image_height = camera_info.loc[0, 'image_height']
         image_width = camera_info.loc[0, 'image_width']
 
@@ -62,11 +62,20 @@ class StereocameraVisualizer:
         Args:
             image1 (numpy.ndarray): RGB image.
             image2 (numpy.ndarray): Depth image.
-            image3 (numpy.ndarray): Additional image to merge with.
+            image3 (numpy.ndarray): Merged color image with depth map.
         """
+        scale_factor =  0.7
+
+        ## Resize images
+        image1_resized = cv2.resize(image1, (0, 0), fx=scale_factor, fy=scale_factor)
+        image2_resized = cv2.resize(image2, (0, 0), fx=scale_factor, fy=scale_factor)
+        image3_resized = cv2.resize(image3, (0, 0), fx=scale_factor, fy=scale_factor)
+
+        # Convert depth image to color map
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(image2_resized, alpha=0.03), cv2.COLORMAP_HOT)
 
         # Merge the images horizontally
-        merged_image = cv2.hconcat([image1, image2, image3])
+        merged_image = cv2.hconcat([image1_resized, depth_colormap, image3_resized])
 
         return merged_image
 
@@ -79,11 +88,9 @@ class StereocameraVisualizer:
         while True:
             frame_path = self.color_frames[index]
             depth_path = self.depth_frames[index]
-            frame_path = check_os_windows(frame_path)
-            depth_path = check_os_windows(depth_path)
 
-            frame = cv2.imread(frame_path)
-            depth_map = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
+            frame = cv2.imread(self.data_dir + frame_path)
+            depth_map = cv2.imread(self.data_dir + depth_path, cv2.IMREAD_UNCHANGED)
 
             combined_images = self.combine_rgb_depth_frames(frame, depth_map, depth_threshold=10000)
             merged_images = self.merge_images(frame, depth_map, combined_images)
@@ -114,4 +121,8 @@ class StereocameraVisualizer:
                 break
 
 
+if __name__ == '__main__':
 
+    video_csv_data = 'E:/DATA/thesis/videos/2023_05_05/video_01/'
+    stereo_camera = StereocameraVisualizer(video_csv_data)
+    stereo_camera.visualize_stereo_camera()
