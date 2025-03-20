@@ -4,7 +4,12 @@ import shutil
 import cv2
 import pandas as pd
 
-from project_utils.project_utils import (check_path, check_file, check_os_windows, estimate_pedestrian_distance, estimate_pedestrian_position, save_csv_file)
+from project_utils.project_utils import (check_path, check_file,
+                                         check_os_windows,
+                                         get_data,
+                                         estimate_pedestrian_distance,
+                                         estimate_pedestrian_position,
+                                         save_csv_file)
 
 import numpy as np
 import torch
@@ -12,7 +17,7 @@ from deep_sort_realtime.deepsort_tracker import DeepSort
 
 
 class DatasetManager:
-    def __init__(self, data_path: str, output_folder: str):
+    def __init__(self, data_path: str, video, output_folder: str):
         """
         Class to create a dataset with human actions and intent from several frames extracted from
         a video file or from rosbags.
@@ -23,10 +28,11 @@ class DatasetManager:
         """
         self._DATA_COLUMNS = ['timestamp', 'Robot odometry', 'rgb_frame', 'depth_frame']
 
-        self.frames_data = Path(data_path, 'navigation_data.csv')
-        self.camera_info = Path(data_path, 'camera_info.csv')
+        self.frames_data = Path(data_path,video, 'navigation_data.csv')
+        self.camera_info = Path(data_path, video, 'camera_info.csv')
 
-        self.source = data_path.split('/')[-2]
+        self.data_path = data_path
+        self.source = video
 
         self.camera_info = check_os_windows(self.camera_info)
 
@@ -48,8 +54,8 @@ class DatasetManager:
         self.output_folder = check_os_windows(output_folder)
         check_path(folder_path=self.output_folder, create=True)
 
-        self.pedestrian_counter = 0
-        self.start_timestamp = 0
+        self.pedestrian_counter = 53
+        self.start_timestamp = 1683275500555212705
 
     def get_camera_info(self):
         """
@@ -102,8 +108,8 @@ class DatasetManager:
             timestamp = timestamps[index]
             frame_path = color_frames[index]
             depth_path = depth_frames[index]
-            frame_path = check_os_windows(frame_path)
-            depth_path = check_os_windows(depth_path)
+            frame_path = check_os_windows(self.data_path + frame_path)
+            depth_path = check_os_windows(self.data_path + depth_path)
 
             frame = cv2.imread(frame_path)
             depth_map = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
@@ -174,8 +180,8 @@ class DatasetManager:
             timestamp = timestamps[index]
             frame_path = color_frames[index]
             depth_path = depth_frames[index]
-            frame_path = check_os_windows(frame_path)
-            depth_path = check_os_windows(depth_path)
+            frame_path = check_os_windows(self.data_path + frame_path)
+            depth_path = check_os_windows(self.data_path + depth_path)
 
             frame = cv2.imread(frame_path)
             depth_map = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
@@ -227,7 +233,6 @@ class DatasetManager:
             if key == ord('q'):
                 break
 
-
     def action_analysis(self, frame_data, start_timestamp, end_timestamp, pedestrian_counter, check_intention=False):
         """
         review each pedestrian in the set of frames and labels their actions and final intent.
@@ -249,12 +254,18 @@ class DatasetManager:
             checked_frames += 1
             print(f"Checking frame {checked_frames} of {len(frames_to_check) + 1}")
             pedestrians_in_frame = []
-            color_frame_path = Path(row['rgb_frame'])
-            depth_frame_path = Path(row['depth_frame'])
+            color_frame_path = row['rgb_frame']
+            depth_frame_path = row['depth_frame']
             timestamp = row['timestamp']
+            ned_coordinates = row['Robot NED position']
+            robot_velocity = row['Robot estimated velocity']
 
-            color_frame_path = check_os_windows(color_frame_path)
-            depth_frame_path = check_os_windows(depth_frame_path)
+            robot_position = get_data(data=ned_coordinates, mode='NED')
+            robot_velocity = get_data(data=robot_velocity, mode='velocity')
+
+
+            color_frame_path = check_os_windows(self.data_path + color_frame_path)
+            depth_frame_path = check_os_windows(self.data_path + depth_frame_path)
 
             frame = cv2.imread(color_frame_path)
             depth_map = cv2.imread(depth_frame_path, cv2.IMREAD_UNCHANGED)
@@ -336,6 +347,8 @@ class DatasetManager:
                         'timestamp': timestamp,
                         'track_id': track_id,
                         'source': self.source,
+                        'robot_position': robot_position,
+                        'robot_velocity': robot_velocity,
                         'bounding_box': str([x1, y1, x2, y2]),
                         'confidence': confidence,
                         'distance': pedestrian_distance,
@@ -357,6 +370,8 @@ class DatasetManager:
                         'timestamp': timestamp,
                         'track_id': track_id,
                         'source': self.source,
+                        'robot_position': robot_position,
+                        'robot_velocity': robot_velocity,
                         'bounding_box': [x1, y1, x2, y2],
                         'confidence': confidence,
                         'distance': pedestrian_distance,
@@ -364,6 +379,7 @@ class DatasetManager:
                         'action': pedestrian_actions[track_id],
                         'intent': pedestrian_intents[track_id]
                     }
+
 
                     # save the data as csv file
                     save_path = save_csv_file(pedestrian_data, file_name, self.output_folder, create=False)
@@ -443,10 +459,11 @@ class DatasetManager:
 
 
 def main():
-    data_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_01/'
+    data_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/2023_05_05/'
+    video = 'video_01'
     output_folder = '/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_01/'
 
-    dataset_manager = DatasetManager(data_path=data_path, output_folder=output_folder)
+    dataset_manager = DatasetManager(data_path=data_path, video=video, output_folder=output_folder)
     dataset_manager.create_classes_for_intent_prediction()
 
 if __name__ == '__main__':
