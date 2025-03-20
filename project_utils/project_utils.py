@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import torch
+import ast
 
-def check_os_windows(data_dir: str):
+def check_os_windows(data_dir: str|Path):
     """Check if the OS is Windows and change the path accordingly
 
     Args:
@@ -106,6 +107,42 @@ def save_csv_file(data, file_name, output_dir, create=True):
         pedestrian_data_df.to_csv(file_name, index=False)
 
     return pedestrian_dir
+
+
+def parse_position_string(position_str):
+    # for data_string in position_str.split():
+    #     if data_string.startswith('['):
+    #         position_str = data_string
+    #         break
+    position_list = ast.literal_eval(position_str)  # Convert string to list
+    return tuple(map(float, position_list))  # Convert all elements to float and return as tuple
+
+
+def get_data(data, mode: str):
+    if mode == 'NED':
+        ned_data = parse_position_string(data)
+        North = round(ned_data[0], 3)
+        East = round(ned_data[1], 3)
+        Down = round(ned_data[2], 3)
+        return [North, East, Down]
+
+    elif mode == 'ECEF':
+        ecef_data = parse_position_string(data)
+        x_positions, y_positions, z_positions = zip(*ecef_data)
+        return x_positions, y_positions, z_positions
+
+    elif mode == 'LLH':
+        llh_data = parse_position_string(data)
+        latitudes, longitudes, heights = zip(*llh_data)
+
+        return latitudes, longitudes, heights
+
+    elif mode == 'velocity':
+        vel_data = parse_position_string(data)
+        x_velocity = round(vel_data[0], 6)
+        y_velocity = round(vel_data[1], 6)
+        z_velocity = round(vel_data[2], 6)
+        return x_velocity, y_velocity, z_velocity
 
 def estimate_pedestrian_distance(depth_image, depth_scale=0.001):
     """Restore the depth values to their original range
