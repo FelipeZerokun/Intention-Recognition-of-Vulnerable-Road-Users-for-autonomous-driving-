@@ -4,13 +4,13 @@ from pathlib import Path
 
 import os
 
-from project_utils import check_path, check_file, check_os_windows
+from project_utils.project_utils import check_path, check_file, check_os_windows
 
 class ClassAnalysis:
 
     def __init__(self, class_dir: str):
+
         self.class_dir = class_dir
-        check_path(self.class_dir)
 
         self.class_name = class_dir.split('/')[-3]
         self.pedestrian_number = class_dir.split('/')[-2]
@@ -53,6 +53,12 @@ class ClassAnalysis:
                     images_ok = False
                 else:
                     total_images += 1
+            elif image.is_file() and image.suffix == '.csv':
+                #modify the track_id column in the CSV file
+                csv_data = pd.read_csv(self.csv_dir)
+                csv_data['track_id'] = int(self.pedestrian_number.split('_')[-1])
+                csv_data.to_csv(self.csv_dir, index=False)
+
         if total_images != timestamp_data_len:
             print(f"Total images in the folder: {total_images}. Total images in the CSV file: {timestamp_data_len}.")
             images_ok = False
@@ -87,8 +93,8 @@ class ClassAnalysis:
                 os.remove(image_path)
                 continue
 
-        # Save the new CSV file
-        self.class_data.to_csv(self.csv_dir, index=False)
+        # # Save the new CSV file
+        # self.class_data.to_csv(self.csv_dir, index=False)
 
     def find_image_with_timestamp(self, timestamp):
         """ The images in the folder have the following name format: pedestrian_n_timestamp.png
@@ -104,8 +110,9 @@ class ClassAnalysis:
 
         return None
 def main():
-    dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/Videos/video_04/classes/'
-    class_name = 'walking/pedestrian_169/'
+    # dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_01/'
+    dataset_dir = 'E:/DATA/thesis/intent_prediction_dataset/classes_01/'
+    class_name = 'standing_still_1/pedestrian_53/'
 
     class_analysis = ClassAnalysis(dataset_dir + class_name)
     class_analysis.check_images_with_timestamp()
