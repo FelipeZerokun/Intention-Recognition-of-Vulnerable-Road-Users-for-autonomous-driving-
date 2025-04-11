@@ -1,30 +1,38 @@
 from pathlib import Path
 import shutil
+from typing import Tuple, List, Dict, Any
 
 import cv2
-import pandas as pd
-
-from project_utils.project_utils import (check_path, check_file,
-                                         check_os_windows,
-                                         get_data,
-                                         estimate_pedestrian_distance,
-                                         estimate_pedestrian_position,
-                                         save_csv_file)
-
 import numpy as np
+import pandas as pd
 import torch
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
+from project_utils.project_utils import (
+    check_path,
+    check_file,
+    check_os_windows,
+    get_data,
+    estimate_pedestrian_distance,
+    estimate_pedestrian_position,
+    save_csv_file
+)
+
 
 class DatasetManager:
+    """
+        A class to manage datasets for human action and intent recognition. It processes video frames,
+        extracts data, and organizes it into classes for action and intent prediction.
+
+       """
     def __init__(self, data_path: str, video, output_folder: str):
         """
-        Class to create a dataset with human actions and intent from several frames extracted from
-        a video file or from rosbags.
+        Initializes the DatasetManager with paths and loads necessary models.
 
         Args:
-            video_data (Path): Path to the CSV file with the frame's data.
-
+            data_path (str): Path to the dataset directory.
+            video (str): Name of the video or source folder.
+            output_folder (str): Path to the output folder for saving processed data.
         """
         self._DATA_COLUMNS = ['timestamp', 'Robot odometry', 'rgb_frame', 'depth_frame']
 
@@ -54,13 +62,17 @@ class DatasetManager:
         self.output_folder = check_os_windows(output_folder)
         check_path(folder_path=self.output_folder, create=True)
 
-        self.pedestrian_counter = 53
-        self.start_timestamp = 1683275500555212705
+        self.pedestrian_counter = 0
+        self.start_timestamp = 0
 
-    def get_camera_info(self):
+    def get_camera_info(self) -> Tuple[List[int], np.ndarray]:
         """
-        Get the camera info from the CSV file.
+        Reads camera information from a CSV file and extracts image size and intrinsic matrix.
+
+        Returns:
+            Tuple[List[int], np.ndarray]: A tuple containing image size [height, width] and intrinsic matrix.
         """
+
         camera_info = pd.read_csv(self.camera_info)
         image_height = camera_info.loc[0, 'image_height']
         image_width = camera_info.loc[0, 'image_width']
@@ -72,13 +84,17 @@ class DatasetManager:
 
         return ([image_height, image_width], intrinsic_matrix)
 
-    def check_correct_frames_data(self):
+    def check_correct_frames_data(self) -> pd.DataFrame:
         """
-        Check if the frames data CSV file has the correct columns.
+        Validates the structure of the frames data CSV file to ensure it contains the required columns.
+
+        Returns:
+            pd.DataFrame: The validated frames data.
 
         Raises:
-            ValueError: If the columns are not correct.
+            ValueError: If any required columns are missing.
         """
+
         frame_data = pd.read_csv(self.frames_data)
 
         columns = frame_data.columns
@@ -89,9 +105,9 @@ class DatasetManager:
 
         return frame_data
 
-    def create_classes_for_action_recognition(self):
+    def create_classes_for_action_recognition(self) -> None:
         """
-        Manual creation of classes for the dataset for the Action Recognition model.
+        Allows manual creation of classes for the dataset for the Action Recognition model.
         """
         frame_data = self.check_correct_frames_data()
         frame_data = frame_data.loc[frame_data['timestamp'] >= self.start_timestamp]
@@ -161,9 +177,9 @@ class DatasetManager:
             if key == ord('q'):
                 break
 
-    def create_classes_for_intent_prediction(self):
+    def create_classes_for_intent_prediction(self) -> None:
         """
-        Manual creation of classes for the dataset for the Action Recognition model.
+        Allows manual creation of classes for the dataset for the Intent Prediction model.
         """
         frame_data = self.check_correct_frames_data()
         frame_data = frame_data.loc[frame_data['timestamp'] >= self.start_timestamp]
@@ -233,14 +249,26 @@ class DatasetManager:
             if key == ord('q'):
                 break
 
-    def action_analysis(self, frame_data, start_timestamp, end_timestamp, pedestrian_counter, check_intention=False):
+    def action_analysis(
+        self,
+        frame_data: pd.DataFrame,
+        start_timestamp: str,
+        end_timestamp: str,
+        pedestrian_counter: int,
+        check_intention: bool = False
+    ) -> int:
         """
-        review each pedestrian in the set of frames and labels their actions and final intent.
+        Reviews each pedestrian in the set of frames and labels their actions and final intent.
+
         Args:
-            frame_data (pd.DataFrame): Dataframe with the Pedestrians data
-            start_timestamp (str): Start timestamp
-            end_timestamp (str): End timestamp
-            pedestrian_counter (int): Counter for the pedestrians found in each section of the dataset
+            frame_data (pd.DataFrame): DataFrame with the pedestrians data.
+            start_timestamp (str): Start timestamp.
+            end_timestamp (str): End timestamp.
+            pedestrian_counter (int): Counter for the pedestrians found in each section of the dataset.
+            check_intention (bool, optional): Flag to check for pedestrian intention. Defaults to False.
+
+        Returns:
+            int: Updated pedestrian counter after processing.
         """
         pedestrian_actions = {}
         pedestrian_intents = {}
@@ -388,17 +416,38 @@ class DatasetManager:
         return (pedestrian_counter +len(pedestrian_tracks))
 
 
-    def track_pedestrians(self, frame, detections):
-        """Track pedestrians using DeepSort tracker
+    def track_pedestrians(self, frame: np.ndarray, detections: np.ndarray) -> List[Any]:
+        """
+        Tracks pedestrians using the DeepSort tracker.
+
+        Args:
+            frame (np.ndarray): The current video frame.
+            detections (np.ndarray): Array of detections in the current frame.
+
+        Returns:
+            List[Any]: List of tracked pedestrian objects.
         """
         tracks = self.tracker.update_tracks(detections, frame=frame)
 
         return tracks
 
 
-    def combine_rgb_depth_frames(self, frame, depth_map, depth_threshold=10000):
+    def combine_rgb_depth_frames(
+        self,
+        frame: np.ndarray,
+        depth_map: np.ndarray,
+        depth_threshold: int = 10000
+    ) -> np.ndarray:
         """
-        Combine a RGB and a Depth Map into a single image.
+        Combines an RGB frame and a depth map into a single image for visualization.
+
+        Args:
+            frame (np.ndarray): The RGB image.
+            depth_map (np.ndarray): The depth map corresponding to the RGB image.
+            depth_threshold (int, optional): Threshold to cap depth values. Defaults to 10000.
+
+        Returns:
+            np.ndarray: Combined image with depth overlay.
         """
         # if values from the depth map are greater than 10000, make them 0
         depth_map[depth_map > depth_threshold] = 0
@@ -408,15 +457,15 @@ class DatasetManager:
 
         return combined
 
-    def save_frames(self, start_timestamp, end_timestamp, action, intent, pedestrian_counter):
-        """
-        Save the frames from the start timestamp to the end timestamp in a folder.
+    def save_frames(
+            self,
+            start_timestamp: str,
+            end_timestamp: str,
+            action: str,
+            intent: int,
+            pedestrian_counter: int
+    ) -> None:
 
-        Args:
-            start_timestamp (str): Start timestamp
-            end_timestamp (str): End timestamp
-            action (str): Action to save the frames
-        """
         print(f"Saving frames from {start_timestamp} to {end_timestamp} for action {action} number {pedestrian_counter}")
 
         if self.check_intention:
@@ -460,8 +509,8 @@ class DatasetManager:
 
 def main():
     data_path = '/media/felipezero/T7 Shield/DATA/thesis/Videos/2023_05_05/'
-    video = 'video_01'
-    output_folder = '/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_01/'
+    video = 'video_02'
+    output_folder = '/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_02/'
 
     dataset_manager = DatasetManager(data_path=data_path, video=video, output_folder=output_folder)
     dataset_manager.create_classes_for_intent_prediction()
