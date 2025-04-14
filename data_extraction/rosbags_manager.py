@@ -1,18 +1,26 @@
-from project_utils.project_utils import check_path, save_image_file
-
 import rosbag
 from pathlib import Path
-
 import pandas as pd
-from data_extraction import *
-
+import numpy as np
+import cv2
 import logging
 import subprocess
+from typing import Dict, List, Tuple
+
+from project_utils.project_utils import (
+    check_path,
+    save_image_file,
+)
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class RosbagManager():
+    """
+        A class to manage and extract data from ROS bag files.
+
+    """
 
     _stereo_info = '/camera/color/camera_info'
     _stereo_image = '/camera/color/image_raw'
@@ -39,22 +47,39 @@ class RosbagManager():
 
     _topics = [_odom_topic, *_stereo_topics, *_gnss_topics]
 
-    def __init__(self, path: Path, name: str):
+    def __init__(self, path: Path, name: str) -> None:
+        """
+        Initializes the RosbagManager object.
+
+        Args:
+            path (Path): Path to the directory containing the ROS bag file.
+            name (str): Name of the ROS bag file.
+        """
         self.path = path
         self.name = name
         self.file = Path(self.path, self.name)
         self.bag = None
 
-    def _open_bag(self):
+    def _open_bag(self) -> None:
+        """
+            Opens the ROS bag file for reading.
+        """
         self.bag = rosbag.Bag(self.file, 'r', skip_index=True)
         print("Rosbag opened successfully")
         logging.info('Rosbag opened successfully.')
 
-    def _close_bag(self):
+    def _close_bag(self) -> None:
+        """
+            Closes the ROS bag file.
+        """
         self.bag.close()
         logging.info('Rosbag closed successfully.')
 
-    def reindex_bag(self):
+    def reindex_bag(self) -> None:
+        """"
+            Reindexes the ROS bag file to fix any indexing issues.
+        """
+
         try:
             logging.info(f'Reindexing rosbag {self.name}')
             print("Reindexing rosbag")
@@ -69,7 +94,10 @@ class RosbagManager():
         except Exception as e:
             logging.warning(f'Error while reindexing rosbag {self.name}: {e}')
 
-    def check_bag(self):
+    def check_bag(self) -> None:
+        """
+            Checks the contents of the ROS bag file and prints metadata.
+        """
         try:
             self._open_bag()
             print(f'Bag duration: {self.bag.get_end_time() - self.bag.get_start_time()}')
@@ -98,9 +126,12 @@ class RosbagManager():
         finally:
             self._close_bag()
 
-    def extract_all_data(self, output_dir: str):
+    def extract_all_data(self, output_dir: str) -> None:
         """
-        Extract stereo data from the rosbag.
+        Extracts all relevant data from the ROS bag file and saves it to the specified directory.
+
+        Args:
+            output_dir (str): Directory to save the extracted data.
         """
         frames_to_skip = 1
         show_info = True
@@ -220,9 +251,18 @@ class RosbagManager():
             cv2.destroyAllWindows()
             self._close_bag()
 
-    def extract_stereo_data(self, output_dir: str):
+    def extract_stereo_data(self, output_dir: str) -> None:
         """
-        Extract stereo data from the rosbag.
+        Extracts stereo data (RGB and depth frames) from the ROS bag file and saves it to the specified directory.
+
+        This function processes stereo camera topics to extract RGB frames and depth maps.
+        The extracted data is saved as image files, and metadata is stored in a CSV file.
+
+        Args:
+            output_dir (str): Directory to save the extracted RGB and depth frames, along with the metadata.
+
+        Raises:
+            Exception: If an error occurs during the extraction process.
         """
         frames_to_skip = 1
         show_info = True
@@ -307,8 +347,10 @@ class RosbagManager():
             cv2.destroyAllWindows()
             self._close_bag()
 
-
-    def extract_video(self):
+    def extract_video(self) -> None:
+        """
+        Extracts video frames from the ROS bag file and saves them as a video file.
+        """
         try:
             self._open_bag()
 

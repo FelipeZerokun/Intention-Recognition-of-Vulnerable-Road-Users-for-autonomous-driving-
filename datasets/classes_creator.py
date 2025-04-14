@@ -189,7 +189,7 @@ class HumanActionClassCreation:
         frames_to_save = frame_data[(frame_data['timestamp'] >= start_timestamp) & (frame_data['timestamp'] <= end_timestamp)].copy()
 
         # Explicitly cast the 'action' column to string dtype
-        frames_to_save.loc['action'] = frames_to_save['action'].astype(str)
+        frames_to_save.loc['action'] = frames_to_save['action'].astype  (str)
         frames_to_save.loc[:, 'action'] = action # or any default value
 
         if 'intent' not in frames_to_save.columns:
@@ -214,8 +214,8 @@ class HumanActionClassCreation:
 
 
 def main():
-    frames_data = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_01/navigation_data.csv')
-    output_folder = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/classes_01/')
+    frames_data = Path('/media/felipezero/T7 Shield/DATA/thesis/Videos/video_02/navigation_data.csv')
+    output_folder = Path('/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_02/')
 
     HumanActionClassCreation(frames_data=frames_data, output_folder=output_folder, check_intention = True)
 
