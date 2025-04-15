@@ -28,7 +28,7 @@ class ClassAugmentation:
 
         print(self.classes)
 
-        self.augment_data(self.classes[0])
+        # self.augment_data(self.classes[3])
 
     def check_classes(self) -> (List[List[str]], int):
         """
@@ -157,6 +157,7 @@ class ClassAugmentation:
 
 def main():
     dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/action_recognition_dataset/'
+    dataset_dir = 'E:/DATA/thesis/intent_prediction_dataset/classes_01_test/'
 
     transformations = ['flip', 'brightness']  # 'flip', 'brightness' and/or 'rotate'
 
