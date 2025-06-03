@@ -4,9 +4,9 @@ import os
 from pathlib import Path
 
 
-class VideoLabeling:
+class FrameExtractor:
     def __init__(self, videos_dir: Path, frames_dir: Path):
-        """Class for annotating videos
+        """Class for extracting single frames from a video
 
         Args:
             video_path (str): Path to the video file
@@ -55,7 +55,7 @@ def main():
     data_dir = Path('/media/felipezero/T7 Shield/DATA/thesis/videos')
     videos_dir = Path(data_dir, 'unlabeled_videos')
     output_dir = Path(data_dir, 'labeled_videos')
-    video_labeling = VideoLabeling(videos_dir, output_dir)
+    video_labeling = FrameExtractor(videos_dir, output_dir)
     video_labeling.extract_frames_single()
 
 

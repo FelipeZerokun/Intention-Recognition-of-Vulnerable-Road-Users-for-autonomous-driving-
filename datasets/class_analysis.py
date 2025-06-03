@@ -7,8 +7,33 @@ import os
 from project_utils.project_utils import check_path, check_file, check_os_windows
 
 class ClassAnalysis:
+    """
+        Utility class to verify the consistency and integrity of labeled pedestrian class data.
+
+        It ensures that:
+            - The folder structure and file names match the expected pedestrian ID format.
+            - All image frame timestamps match the ones recorded in the corresponding CSV file.
+            - Any discrepancies (e.g., extra images or incorrect file names) are automatically corrected or flagged.
+
+        Attributes:
+            class_dir (str): Path to the directory containing images and CSV for a single pedestrian class.
+            class_name (str): Name of the behavior class (e.g., 'walking_1').
+            pedestrian_number (str): Pedestrian identifier extracted from the directory structure.
+            csv_dir (str): Full path to the associated CSV file.
+            class_data (pd.DataFrame): Loaded content of the CSV file with timestamps and metadata.
+        """
 
     def __init__(self, class_dir: str):
+        """
+       Initializes the ClassAnalysis object, verifies pedestrian number consistency,
+       loads the corresponding CSV, and checks image-to-CSV alignment.
+
+       Args:
+           class_dir (str): Path to the directory containing pedestrian images and CSV file.
+
+       Raises:
+           FileNotFoundError: If the expected CSV file is not found in the given directory.
+       """
 
         self.class_dir = class_dir
 
@@ -26,7 +51,13 @@ class ClassAnalysis:
         self.check_images_in_folder()
 
     def check_pedestrian_number(self):
-        """ Check if the pedestrian number in the files in the folder is the same as the one in the folder name.
+        """
+        Verifies that all filenames in the folder contain the correct pedestrian number
+        (matching the directory name). If discrepancies are found, filenames are automatically
+        corrected to reflect the correct pedestrian number.
+
+        Example:
+            If directory is named 'pedestrian_02', files should follow 'pedestrian_02_*.png' format.
         """
         for files in Path(self.class_dir).iterdir():
             if files.is_file():
@@ -39,8 +70,15 @@ class ClassAnalysis:
 
 
     def check_images_in_folder(self):
-        """ Check if the images in the folder are the same as the ones in the CSV file. If there are more images in the folder, with a different timestamp, add them to the CSV file.
         """
+        Compares all image files in the folder to the timestamps listed in the CSV file.
+        - Prints warnings for images not found in the CSV.
+        - Reports total mismatches between image count and CSV row count.
+        - If a CSV is found, updates the 'track_id' column to reflect the correct pedestrian number in the folder.
+        - Provides a final status message on consistency.
+        - Only checks PNG files and ignores other file types in the directory.
+
+    """
         images_ok = True
         total_images = 0
         timestamp_data = self.class_data['timestamp'].values
@@ -69,8 +107,19 @@ class ClassAnalysis:
             print("Images in the folder are not the same as the ones in the CSV file.")
 
     def check_images_with_timestamp(self):
-        """ Loop through each row and get the timestamp.
-        Using the timestamp, find the images with the same timestamp in the folder.
+        """
+        Iterates through each row in the CSV and checks whether a corresponding image
+        with the same timestamp exists in the folder.
+
+        If an image is missing or visually incorrect (as judged by the user):
+            - The row in the CSV is removed.
+            - The image file is deleted from disk.
+
+        Displays each image with OpenCV and prompts user input to validate.
+
+        User input:
+            - 'y': Keep image
+            - 'n': Delete image and corresponding CSV row
         """
         for index, row in self.class_data.iterrows():
             timestamp = row['timestamp']
@@ -97,8 +146,15 @@ class ClassAnalysis:
         # self.class_data.to_csv(self.csv_dir, index=False)
 
     def find_image_with_timestamp(self, timestamp):
-        """ The images in the folder have the following name format: pedestrian_n_timestamp.png
-        Find the image with the same timestamp as the one in the row.
+        """
+        Searches for an image file in the folder that contains the given timestamp
+        in its filename.
+
+        Args:
+            timestamp (int): Timestamp value to search for in image filenames.
+
+        Returns:
+            str or None: Full path to the matching image if found, otherwise None.
         """
         print(f"Checking image with timestamp {timestamp}")
         for image in Path(self.class_dir).iterdir():
@@ -111,8 +167,8 @@ class ClassAnalysis:
         return None
 def main():
     # dataset_dir = '/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_01/'
-    dataset_dir = 'E:/DATA/thesis/intent_prediction_dataset/classes_01/'
-    class_name = 'standing_still_1/pedestrian_53/'
+    dataset_dir = 'E:/DATA/thesis/intent_prediction_dataset/classes_02/'
+    class_name = 'walking_1/pedestrian_10/'
 
     class_analysis = ClassAnalysis(dataset_dir + class_name)
     class_analysis.check_images_with_timestamp()

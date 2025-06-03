@@ -21,14 +21,52 @@ from project_utils.project_utils import (
 
 class DatasetManager:
     """
-        A class to manage datasets for human action and intent recognition. It processes video frames,
-        extracts data, and organizes it into classes for action and intent prediction.
+    A class to manage datasets for human action and intent recognition.
+    It uses data extracted from RGB and depth frames, along with YOLOv5 for detection.
 
-       """
+
+    This class handles loading and validating sensor and image data, tracking pedestrians using
+    YOLOv5 and DeepSORT, and providing interactive tools for manually labeling pedestrian actions
+    and intentions. It supports creating datasets for both Action Recognition and Intent Prediction
+    models by combining RGB and depth information and saving pedestrian-specific data sequences.
+
+    Attributes:
+        data_path (str): Path to the dataset directory.
+        source (str): Name of the video or source folder.
+        output_folder (str): Path to the output folder for saving processed data.
+        frames_data (Path): Path to the navigation data CSV file.
+        camera_info (Path): Path to the camera information CSV file.
+        image_size (List[int]): Image dimensions [height, width].
+        camera_intrinsics (np.ndarray): Intrinsic camera matrix.
+        model (torch.nn.Module): Pretrained YOLOv5 model for pedestrian detection.
+        tracker (DeepSort): DeepSort tracker for pedestrian tracking.
+        pedestrian_counter (int): Counter for pedestrian identification.
+        start_timestamp (int): Initial timestamp for filtering frames.
+
+    Methods:
+        get_camera_info():
+            Loads camera parameters including image size and intrinsic matrix.
+
+        check_correct_frames_data():
+            Validates that all required columns exist in the navigation CSV file.
+
+        create_classes_for_action_recognition():
+            Interactive method to annotate sequences for action recognition, allowing the user
+            to view frame pairs and define action segments.
+
+        create_classes_for_intent_prediction():
+            Similar to action class creation, but prompts intent labeling for each pedestrian
+            based on visual and distance cues.
+
+        action_analysis():
+            Processes all pedestrian detections within a timestamp window to confirm pedestrian
+            presence, estimate distance and position, and prompt the user to annotate their
+            actions and intentions.
+    """
     def __init__(self, data_path: str, video, output_folder: str):
         """
-        Initializes the DatasetManager with paths and loads necessary models.
-
+        Initializes the DatasetManager by setting paths, loading YOLOv5 and DeepSORT models,
+        and preparing camera info data.
         Args:
             data_path (str): Path to the dataset directory.
             video (str): Name of the video or source folder.
@@ -62,15 +100,16 @@ class DatasetManager:
         self.output_folder = check_os_windows(output_folder)
         check_path(folder_path=self.output_folder, create=True)
 
-        self.pedestrian_counter = 0
-        self.start_timestamp = 0
+        self.pedestrian_counter = 9
+        self.start_timestamp = 1683276896237854159
 
     def get_camera_info(self) -> Tuple[List[int], np.ndarray]:
         """
-        Reads camera information from a CSV file and extracts image size and intrinsic matrix.
-
+        Loads camera parameters from a CSV file, including image size and intrinsic camera matrix.
         Returns:
-            Tuple[List[int], np.ndarray]: A tuple containing image size [height, width] and intrinsic matrix.
+            Tuple[List[int], np.ndarray]: A tuple containing the image size as a list [height, width]
+            and the intrinsic camera matrix as a numpy array.
+
         """
 
         camera_info = pd.read_csv(self.camera_info)
@@ -86,13 +125,12 @@ class DatasetManager:
 
     def check_correct_frames_data(self) -> pd.DataFrame:
         """
-        Validates the structure of the frames data CSV file to ensure it contains the required columns.
-
+        Validates that the frames data CSV file contains all required columns for processing.
         Returns:
-            pd.DataFrame: The validated frames data.
-
+            pd.DataFrame: The DataFrame containing the frames data if validation is successful.
         Raises:
-            ValueError: If any required columns are missing.
+            ValueError: If any required column is missing from the frames data CSV file.
+
         """
 
         frame_data = pd.read_csv(self.frames_data)
@@ -107,7 +145,16 @@ class DatasetManager:
 
     def create_classes_for_action_recognition(self) -> None:
         """
-        Allows manual creation of classes for the dataset for the Action Recognition model.
+        Launches a manual annotation interface to label frame sequences for pedestrian action.
+
+        The user can label actions for pedestrians detected in the frames, and the sequences are saved
+        in the specified output folder.
+            - Use 'a' to move to the previous frame.
+            - Use 'd' to move to the next frame.
+            - Use 'r' to start/stop recording a sequence of frames.
+            - The frames between the start and end timestamps will be analyzed for pedestrians action.
+            - End timestamp must be greater than the start timestamp.
+
         """
         frame_data = self.check_correct_frames_data()
         frame_data = frame_data.loc[frame_data['timestamp'] >= self.start_timestamp]
@@ -179,7 +226,16 @@ class DatasetManager:
 
     def create_classes_for_intent_prediction(self) -> None:
         """
-        Allows manual creation of classes for the dataset for the Intent Prediction model.
+        Launches a manual annotation interface to label frame sequences for pedestrian intent.
+
+        The user can label actions for pedestrians detected in the frames, and the sequences are saved
+        in the specified output folder.
+            - Use 'a' to move to the previous frame.
+            - Use 'd' to move to the next frame.
+            - Use 'r' to start/stop recording a sequence of frames.
+            - The frames between the start and end timestamps will be analyzed for pedestrians action AND intention.
+            - End timestamp must be greater than the start timestamp.
+
         """
         frame_data = self.check_correct_frames_data()
         frame_data = frame_data.loc[frame_data['timestamp'] >= self.start_timestamp]
@@ -258,17 +314,22 @@ class DatasetManager:
         check_intention: bool = False
     ) -> int:
         """
-        Reviews each pedestrian in the set of frames and labels their actions and final intent.
+        Analyzes pedestrian behavior within a specific time window and stores
+        pedestrian labeled data based on manual input and automated tracking.
+
+        Pedestrians are detected using YOLOv5, tracked using DeepSORT, and filtered
+        based on detection confidence and distance from the robot. The user confirms
+        each detection and assigns a class label via terminal input.
 
         Args:
-            frame_data (pd.DataFrame): DataFrame with the pedestrians data.
-            start_timestamp (str): Start timestamp.
-            end_timestamp (str): End timestamp.
-            pedestrian_counter (int): Counter for the pedestrians found in each section of the dataset.
-            check_intention (bool, optional): Flag to check for pedestrian intention. Defaults to False.
+            frame_data (pd.DataFrame): Frame metadata including timestamps and paths.
+            start_timestamp (str): Timestamp marking the start of the labeling segment.
+            end_timestamp (str): Timestamp marking the end of the labeling segment.
+            pedestrian_counter (int): Counter to index unique pedestrians.
+            check_intention (bool, optional): Whether to collect intention labels. Defaults to False.
 
         Returns:
-            int: Updated pedestrian counter after processing.
+            int: Updated pedestrian counter after processing the segment.
         """
         pedestrian_actions = {}
         pedestrian_intents = {}
@@ -303,7 +364,7 @@ class DatasetManager:
             print("Pedestrians detected: ", len(persons))
 
             if len(persons) == 0:
-                print("Zero persons detected ??????????????????")
+                print("Zero persons detected!")
                 continue
 
             for person in persons:
@@ -465,6 +526,16 @@ class DatasetManager:
             intent: int,
             pedestrian_counter: int
     ) -> None:
+        """
+        Saves frames and metadata for a specific action and intent.
+
+        Args:
+            start_timestamp (str): Start timestamp for the frames to save.
+            end_timestamp (str): End timestamp for the frames to save.
+            action (str): Action label for the pedestrian.
+            intent (int): Intent label (0: no intent, 1: with intent).
+            pedestrian_counter (int): Counter for pedestrian identification.
+        """
 
         print(f"Saving frames from {start_timestamp} to {end_timestamp} for action {action} number {pedestrian_counter}")
 

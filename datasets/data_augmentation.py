@@ -8,17 +8,35 @@ from project_utils.project_utils import check_path
 
 class ClassAugmentation:
     """
-       A class to perform data augmentation on a dataset of pedestrian images and metadata.
+    A class to perform data augmentation on a dataset of pedestrian images and their corresponding metadata.
 
-    """
+    It supports augmenting each pedestrian's data by applying specified transformations
+    (e.g., flip, brightness change, rotation) to the image sequences and generating new folders with updated images
+    and modified copies of the original CSV metadata.
+
+    Attributes:
+        dataset_dir (str): Path to the dataset directory containing subfolders for each action class.
+        transformations (List[str]): A list of transformation types to apply ('flip', 'brightness', 'rotate').
+        classes (List[List[str]]): A list of all classes with [class_name, number of pedestrian folders, class_dir].
+        total_classes (int): Total number of pedestrian folders across all classes.
+
+    Methods:
+        check_classes(): Checks the dataset directory for classes and counts the total number of pedestrian data entries.
+        augment_data(data: List[str]): Iterates through the images in the folder and applies the specified transformations.
+        augment_frame(frame_dir: str, transformations: List[str], output_dir: str, pedestrian_count: int):
+            Applies transformations to a single frame.
+        copy_csv_file(dataframe: pd.DataFrame, pedestrian_count: int, output_dir: str):
+            Copies and saves the CSV file for each transformation.
+
+      """
 
     def __init__(self, dataset_dir: str, transformations: List[str]) -> None:
         """
         Initializes the ClassAugmentation object and performs initial checks.
 
         Args:
-            dataset_dir (str): Path to the dataset directory.
-            transformations (List[str]): List of transformations to apply.
+            dataset_dir (str): Path to the dataset root directory.
+            transformations (List[str]): List of transformations to apply for augmentation.
         """
         self.dataset_dir = dataset_dir
         self.transformations = transformations
@@ -33,9 +51,10 @@ class ClassAugmentation:
     def check_classes(self) -> (List[List[str]], int):
         """
         Checks the dataset directory for classes and counts the total number of pedestrian data entries.
-
         Returns:
-            tuple: A list of classes with their details and the total number of entries.
+            action_classes (List[List[str]): A list of all classes with [class_name, number of pedestrian folders, class_dir.
+            total_classes (int): Total number of pedestrian folders across all classes.
+        :no-index:
         """
         action_classes = []
         classes = os.listdir(self.dataset_dir)
@@ -52,10 +71,10 @@ class ClassAugmentation:
 
     def augment_data(self, data: List[str]) -> None:
         """
-        Iterates through the images in the folder and applies the specified transformations.
+        Performs augmentation for a specific class.
 
         Args:
-            data (List[str]): Details of the class to augment (name, total data, directory).
+            data (List[str]): Class details [class_name, number of pedestrian folders, class directory]
         """
         class_name = data[0]
         total_data = data[1]
@@ -80,13 +99,13 @@ class ClassAugmentation:
 
     def augment_frame(self, frame_dir: str, transformations: List[str], output_dir: str, pedestrian_count: int) -> None:
         """
-        Applies transformations to a single frame.
+        Applies the given transformations to a single frame.
 
         Args:
-            frame_dir (str): Path to the frame image.
-            transformations (List[str]): List of transformations to apply.
-            output_dir (str): Directory to save the augmented frames.
-            pedestrian_count (int): Counter for pedestrian data entries.
+            frame_dir (str): Full path to the image frame (.png).
+            transformations (List[str]): List of transformations to apply (e.g., 'flip', 'brightness', 'rotate').
+            output_dir (str): Output directory where the augmented folders will be saved.
+            pedestrian_count (int): Unique pedestrian number to name the new folders and files.
         """
         frame_name = frame_dir.split('/')[-1].split('_')[-1]
 
@@ -128,12 +147,12 @@ class ClassAugmentation:
 
     def copy_csv_file(self, dataframe: pd.DataFrame, pedestrian_count: int, output_dir: str) -> None:
         """
-        Copies and saves the CSV file for each transformation.
+        Copies and saves the CSV file corresponding to the transformed images.
 
         Args:
-            dataframe (pd.DataFrame): DataFrame containing metadata for the pedestrian.
-            pedestrian_count (int): Counter for pedestrian data entries.
-            output_dir (str): Directory to save the CSV files.
+        dataframe (pd.DataFrame): Metadata CSV as a pandas DataFrame.
+        pedestrian_count (int): Pedestrian identifier for the augmented data.
+        output_dir (str): Base directory where new folders will be created.
         """
 
         for t in self.transformations:
