@@ -1,0 +1,539 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_extraction package &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=34cd777e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="data_loader package" href="data_loader.html" />
+    <link rel="prev" title="Modules" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">data_extraction package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_extraction.data_extraction">data_extraction.data_extraction module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.convert_depth2image"><code class="docutils literal notranslate"><span class="pre">convert_depth2image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_ECEF_position"><code class="docutils literal notranslate"><span class="pre">get_ECEF_position()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_NED_position"><code class="docutils literal notranslate"><span class="pre">get_NED_position()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_camera_info"><code class="docutils literal notranslate"><span class="pre">get_camera_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_color_image"><code class="docutils literal notranslate"><span class="pre">get_color_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_depth_image"><code class="docutils literal notranslate"><span class="pre">get_depth_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_llh_position"><code class="docutils literal notranslate"><span class="pre">get_llh_position()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_odometry"><code class="docutils literal notranslate"><span class="pre">get_odometry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_pointcloud_map"><code class="docutils literal notranslate"><span class="pre">get_pointcloud_map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.get_velocity"><code class="docutils literal notranslate"><span class="pre">get_velocity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.pointcloud_to_image"><code class="docutils literal notranslate"><span class="pre">pointcloud_to_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.data_extraction.visualize_data"><code class="docutils literal notranslate"><span class="pre">visualize_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_extraction.rosbags_manager">data_extraction.rosbags_manager module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.rosbags_manager.RosbagManager"><code class="docutils literal notranslate"><span class="pre">RosbagManager</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_extraction.rosbags_manager.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_extraction">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html">data_loader package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">datasets package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
+      <li class="breadcrumb-item active">data_extraction package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/data_extraction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-extraction-package">
+<h1>data_extraction package<a class="headerlink" href="#data-extraction-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-data_extraction.data_extraction">
+<span id="data-extraction-data-extraction-module"></span><h2>data_extraction.data_extraction module<a class="headerlink" href="#module-data_extraction.data_extraction" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.convert_depth2image">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">convert_depth2image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#convert_depth2image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.convert_depth2image" title="Link to this definition"></a></dt>
+<dd><p>Crops and resizes a depth array to match the original dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>depth_array</strong> (<em>np.ndarray</em>) – A 2D array representing the depth data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The cropped and resized depth array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_ECEF_position">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_ECEF_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gps_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_ECEF_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_ECEF_position" title="Link to this definition"></a></dt>
+<dd><p>Extracts the Earth-Centered, Earth-Fixed (ECEF) position from a GPS message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gps_msg</strong> (<em>geometry_msgs/PointStamped</em>) – A ROS GPS message containing position information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>x_pos (float): The x-coordinate in the ECEF coordinate system.</p></li>
+<li><p>y_pos (float): The y-coordinate in the ECEF coordinate system.</p></li>
+<li><p>z_pos (float): The z-coordinate in the ECEF coordinate system.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_NED_position">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_NED_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gps_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_NED_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_NED_position" title="Link to this definition"></a></dt>
+<dd><p>Extracts the North, East, and Down (NED) position from a GPS message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gps_msg</strong> (<em>geometry_msgs/PointStamped</em>) – A ROS GPS message containing position information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>x_pos (float): The North position (x-coordinate) from the GPS message.</p></li>
+<li><p>y_pos (float): The East position (y-coordinate) from the GPS message.</p></li>
+<li><p>z_pos (float): The Down position (z-coordinate) from the GPS message.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_camera_info">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_camera_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera_info_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_camera_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_camera_info" title="Link to this definition"></a></dt>
+<dd><p>Extract camera intrinsic parameters from a camera info message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>camera_info_msg</strong> (<em>sensor_msgs.msg.CameraInfo</em>) – The ROS camera info message containing the camera parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the focal length (fx, fy), and the principal point (cx, cy).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_color_image">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_color_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_color_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_color_image" title="Link to this definition"></a></dt>
+<dd><p>Converts a ROS image message to an OpenCV image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img_msg</strong> (<em>sensor_msgs/Image</em>) – A ROS image message containing image data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An OpenCV image in RGB format.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_depth_image">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_depth_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth_msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fix_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_depth_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_depth_image" title="Link to this definition"></a></dt>
+<dd><p>Converts a ROS depth image message to an OpenCV image with a colormap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>depth_msg</strong> (<em>sensor_msgs/Image</em>) – A ROS depth image message containing depth data.</p></li>
+<li><p><strong>fix_frame</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to apply a transformation to the depth frame. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An OpenCV image representing the depth data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_llh_position">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_llh_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gps_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_llh_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_llh_position" title="Link to this definition"></a></dt>
+<dd><p>Extracts latitude, longitude, and height from a GPS message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gps_msg</strong> (<em>geometry_msgs/PointStamped</em>) – A ROS GPS message containing position information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>latitude (float): The latitude value from the GPS message.</p></li>
+<li><p>longitude (float): The longitude value from the GPS message.</p></li>
+<li><p>height (float): The height value from the GPS message.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_odometry">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_odometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">odom_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_odometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_odometry" title="Link to this definition"></a></dt>
+<dd><p>Extracts the robot’s position and commands from an odometry message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>odom_msg</strong> (<em>nav_msgs.odom_msg</em>) – A ROS odometry message containing pose and twist information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>robot_position (np.ndarray): An array with the robot’s x and y positions and yaw angle ([x_pos, y_pos, yaw]).</p></li>
+<li><p>robot_commands (np.ndarray): An array with the robot’s linear velocity and angular velocity ([x_vel, z_rot]).</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_pointcloud_map">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_pointcloud_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pointcloud_msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_width</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_pointcloud_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_pointcloud_map" title="Link to this definition"></a></dt>
+<dd><p>Processes a ROS point cloud message to extract 3D points and RGB data, visualize the point cloud,
+and convert it to a 2D OpenCV image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pointcloud_msg</strong> (<em>sensor_msgs/PointCloud2</em>) – A ROS point cloud message containing 3D points and RGB data.</p></li>
+<li><p><strong>image_height</strong> (<em>int</em>) – Height of the output image.</p></li>
+<li><p><strong>image_width</strong> (<em>int</em>) – Width of the output image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array containing the 3D points (XYZ) and RGB data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.get_velocity">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">get_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vel_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#get_velocity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.get_velocity" title="Link to this definition"></a></dt>
+<dd><p>Extracts the linear and angular velocity from a velocity message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vel_msg</strong> (<em>geometry_msgs/Vector3Stamped</em>) – A ROS velocity message containing vector information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>x_vel (float): The linear velocity in the x-direction.</p></li>
+<li><p>y_vel (float): The linear velocity in the y-direction.</p></li>
+<li><p>z_vel (float): The angular velocity in the z-direction.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.pointcloud_to_image">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">pointcloud_to_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xyz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_width</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#pointcloud_to_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.pointcloud_to_image" title="Link to this definition"></a></dt>
+<dd><p>Convert point cloud data to a 2D image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xyz</strong> (<em>np.ndarray</em>) – Array of 3D coordinates (N, 3).</p></li>
+<li><p><strong>rgb</strong> (<em>np.ndarray</em>) – Array of RGB values (N, 3).</p></li>
+<li><p><strong>image_height</strong> (<em>int</em>) – Height of the output image.</p></li>
+<li><p><strong>image_width</strong> (<em>int</em>) – Width of the output image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>2D image created from the point cloud data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.data_extraction.visualize_data">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.data_extraction.</span></span><span class="sig-name descname"><span class="pre">visualize_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/data_extraction.html#visualize_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.data_extraction.visualize_data" title="Link to this definition"></a></dt>
+<dd><p>Visualizes the color and depth images by combining them with a colormap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>color_image</strong> (<em>np.ndarray</em>) – The color image in RGB format.</p></li>
+<li><p><strong>depth_image</strong> (<em>np.ndarray</em>) – The depth image in grayscale format.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-data_extraction.rosbags_manager">
+<span id="data-extraction-rosbags-manager-module"></span><h2>data_extraction.rosbags_manager module<a class="headerlink" href="#module-data_extraction.rosbags_manager" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_extraction.rosbags_manager.</span></span><span class="sig-name descname"><span class="pre">RosbagManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#RosbagManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to manage and extract data from ROS bag files for the creation of datasets for Action Recognition
+and Intent Prediction models.
+This class provides methods to open, close, reindex, and extract data from ROS bag files.
+It supports extracting stereo images, depth maps, point clouds, and odometry data,
+and saving the extracted data to specified directories.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.path" title="Link to this definition"></a></dt>
+<dd><p>Path to the directory containing the ROS bag file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.name" title="Link to this definition"></a></dt>
+<dd><p>Name of the ROS bag file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.file">
+<span class="sig-name descname"><span class="pre">file</span></span><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.file" title="Link to this definition"></a></dt>
+<dd><p>Full path to the ROS bag file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.bag">
+<span class="sig-name descname"><span class="pre">bag</span></span><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.bag" title="Link to this definition"></a></dt>
+<dd><p>The ROS bag file object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rosbag.Bag</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.check_bag">
+<span class="sig-name descname"><span class="pre">check_bag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#RosbagManager.check_bag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.check_bag" title="Link to this definition"></a></dt>
+<dd><p>Checks the contents of the ROS bag file and prints metadata.</p>
+<dl class="simple">
+<dt>Prints:</dt><dd><p>Duration of the bag, message count, and topic information.</p>
+</dd>
+<dt>Logs:</dt><dd><p>Warnings if any errors occur while accessing the bag.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.extract_all_data">
+<span class="sig-name descname"><span class="pre">extract_all_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#RosbagManager.extract_all_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.extract_all_data" title="Link to this definition"></a></dt>
+<dd><p>Extracts all relevant data from the ROS bag file and saves it to the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output_dir</strong> (<em>str</em>) – Directory to save the extracted data.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Saves:</dt><dd><p>RGB frames, depth frames, and navigation data as image files and a CSV file.</p>
+</dd>
+<dt>Logs:</dt><dd><p>Warnings if any errors occur during data extraction.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.extract_stereo_data">
+<span class="sig-name descname"><span class="pre">extract_stereo_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#RosbagManager.extract_stereo_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.extract_stereo_data" title="Link to this definition"></a></dt>
+<dd><p>Extracts stereo data (RGB and depth frames) from the ROS bag file and saves it to the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output_dir</strong> (<em>str</em>) – Directory to save the extracted RGB and depth frames, along with the metadata.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Saves:</dt><dd><p>RGB frames and depth frames as image files, and metadata as a CSV file.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Exception</strong> – If an error occurs during the extraction process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.extract_video">
+<span class="sig-name descname"><span class="pre">extract_video</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#RosbagManager.extract_video"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.extract_video" title="Link to this definition"></a></dt>
+<dd><p>Extracts video frames from the ROS bag file and saves them as a video file.</p>
+<dl class="simple">
+<dt>Saves:</dt><dd><p>A video file containing the extracted frames.</p>
+</dd>
+<dt>Logs:</dt><dd><p>Warnings if any errors occur during video extraction.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.RosbagManager.reindex_bag">
+<span class="sig-name descname"><span class="pre">reindex_bag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#RosbagManager.reindex_bag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.RosbagManager.reindex_bag" title="Link to this definition"></a></dt>
+<dd><p>Reindexes the ROS bag file to fix any indexing issues.</p>
+<dl class="simple">
+<dt>Logs:</dt><dd><p>Information about the reindexing process.
+Warnings if any errors occur during reindexing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_extraction.rosbags_manager.main">
+<span class="sig-prename descclassname"><span class="pre">data_extraction.rosbags_manager.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_extraction/rosbags_manager.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_extraction.rosbags_manager.main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-data_extraction">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-data_extraction" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_loader.html" class="btn btn-neutral float-right" title="data_loader package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

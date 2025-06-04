@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_extraction.data_extraction &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=34cd777e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">data_extraction.data_extraction</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for data_extraction.data_extraction</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">open3d</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">o3d</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sensor_msgs.point_cloud2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pc2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Rotation</span> <span class="k">as</span> <span class="n">R</span>
+
+<div class="viewcode-block" id="get_camera_info">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_camera_info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_camera_info</span><span class="p">(</span><span class="n">camera_info_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract camera intrinsic parameters from a camera info message.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        camera_info_msg (sensor_msgs.msg.CameraInfo): The ROS camera info message containing the camera parameters.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the focal length (fx, fy), and the principal point (cx, cy).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">camera_info_msg</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fy</span> <span class="o">=</span> <span class="n">camera_info_msg</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">camera_info_msg</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">camera_info_msg</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span></div>
+
+
+<div class="viewcode-block" id="get_odometry">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_odometry">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_odometry</span><span class="p">(</span><span class="n">odom_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the robot&#39;s position and commands from an odometry message.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        odom_msg (nav_msgs.odom_msg): A ROS odometry message containing pose and twist information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing:</span>
+<span class="sd">            - robot_position (np.ndarray): An array with the robot&#39;s x and y positions and yaw angle ([x_pos, y_pos, yaw]).</span>
+<span class="sd">            - robot_commands (np.ndarray): An array with the robot&#39;s linear velocity and angular velocity ([x_vel, z_rot]).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_pos</span> <span class="o">=</span> <span class="n">odom_msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">y_pos</span> <span class="o">=</span> <span class="n">odom_msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span>
+
+    <span class="n">quaternion</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">odom_msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">odom_msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+        <span class="n">odom_msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span><span class="p">,</span>
+        <span class="n">odom_msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span>
+    <span class="p">)</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">from_quat</span><span class="p">(</span><span class="n">quaternion</span><span class="p">)</span>
+    <span class="n">roll</span><span class="p">,</span> <span class="n">pitch</span><span class="p">,</span> <span class="n">yaw</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">as_euler</span><span class="p">(</span><span class="s1">&#39;xyz&#39;</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">x_vel</span> <span class="o">=</span> <span class="n">odom_msg</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">z_rot</span> <span class="o">=</span> <span class="n">odom_msg</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span>
+
+    <span class="n">robot_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">yaw</span><span class="p">])</span>
+
+    <span class="n">robot_commands</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_vel</span><span class="p">,</span> <span class="n">z_rot</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">robot_position</span><span class="p">,</span> <span class="n">robot_commands</span></div>
+
+
+<div class="viewcode-block" id="get_llh_position">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_llh_position">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_llh_position</span><span class="p">(</span><span class="n">gps_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts latitude, longitude, and height from a GPS message.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gps_msg (geometry_msgs/PointStamped): A ROS GPS message containing position information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing:</span>
+<span class="sd">            - latitude (float): The latitude value from the GPS message.</span>
+<span class="sd">            - longitude (float): The longitude value from the GPS message.</span>
+<span class="sd">            - height (float): The height value from the GPS message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">latitude</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">longitude</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">z</span>
+
+    <span class="k">return</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">height</span></div>
+
+
+<div class="viewcode-block" id="get_NED_position">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_NED_position">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_NED_position</span><span class="p">(</span><span class="n">gps_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the North, East, and Down (NED) position from a GPS message.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gps_msg (geometry_msgs/PointStamped): A ROS GPS message containing position information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing:</span>
+<span class="sd">            - x_pos (float): The North position (x-coordinate) from the GPS message.</span>
+<span class="sd">            - y_pos (float): The East position (y-coordinate) from the GPS message.</span>
+<span class="sd">            - z_pos (float): The Down position (z-coordinate) from the GPS message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_pos</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">y_pos</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span>
+    <span class="n">z_pos</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">z</span>
+
+    <span class="k">return</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">z_pos</span></div>
+
+
+<div class="viewcode-block" id="get_ECEF_position">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_ECEF_position">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_ECEF_position</span><span class="p">(</span><span class="n">gps_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the Earth-Centered, Earth-Fixed (ECEF) position from a GPS message.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gps_msg (geometry_msgs/PointStamped): A ROS GPS message containing position information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing:</span>
+<span class="sd">            - x_pos (float): The x-coordinate in the ECEF coordinate system.</span>
+<span class="sd">            - y_pos (float): The y-coordinate in the ECEF coordinate system.</span>
+<span class="sd">            - z_pos (float): The z-coordinate in the ECEF coordinate system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_pos</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">y_pos</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span>
+    <span class="n">z_pos</span> <span class="o">=</span> <span class="n">gps_msg</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">z</span>
+
+    <span class="k">return</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">z_pos</span></div>
+
+
+<div class="viewcode-block" id="get_velocity">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_velocity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_velocity</span><span class="p">(</span><span class="n">vel_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the linear and angular velocity from a velocity message.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vel_msg (geometry_msgs/Vector3Stamped): A ROS velocity message containing vector information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing:</span>
+<span class="sd">            - x_vel (float): The linear velocity in the x-direction.</span>
+<span class="sd">            - y_vel (float): The linear velocity in the y-direction.</span>
+<span class="sd">            - z_vel (float): The angular velocity in the z-direction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_vel</span> <span class="o">=</span> <span class="n">vel_msg</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">y_vel</span> <span class="o">=</span> <span class="n">vel_msg</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">y</span>
+    <span class="n">z_vel</span> <span class="o">=</span> <span class="n">vel_msg</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">z</span>
+
+    <span class="k">return</span> <span class="n">x_vel</span><span class="p">,</span> <span class="n">y_vel</span><span class="p">,</span> <span class="n">z_vel</span></div>
+
+
+<div class="viewcode-block" id="get_color_image">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_color_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_color_image</span><span class="p">(</span><span class="n">img_msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a ROS image message to an OpenCV image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img_msg (sensor_msgs/Image): A ROS image message containing image data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: An OpenCV image in RGB format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">img_msg</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">img_msg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">img_msg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">frame</span></div>
+
+
+
+<div class="viewcode-block" id="get_depth_image">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_depth_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_depth_image</span><span class="p">(</span><span class="n">depth_msg</span><span class="p">,</span> <span class="n">fix_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a ROS depth image message to an OpenCV image with a colormap.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        depth_msg (sensor_msgs/Image): A ROS depth image message containing depth data.</span>
+<span class="sd">        fix_frame (bool, optional): Whether to apply a transformation to the depth frame. Defaults to True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: An OpenCV image representing the depth data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">depth_msg</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">depth_msg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">depth_msg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fix_frame</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">convert_depth2image</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">frame</span></div>
+
+
+<div class="viewcode-block" id="convert_depth2image">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.convert_depth2image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_depth2image</span><span class="p">(</span><span class="n">depth_array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Crops and resizes a depth array to match the original dimensions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        depth_array (np.ndarray): A 2D array representing the depth data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: The cropped and resized depth array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cropped_image</span> <span class="o">=</span> <span class="n">depth_array</span><span class="p">[</span><span class="mi">120</span><span class="p">:</span><span class="o">-</span><span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">:</span><span class="o">-</span><span class="mi">120</span><span class="p">]</span>
+    <span class="n">cropped_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">cropped_image</span><span class="p">,</span> <span class="p">(</span><span class="n">depth_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">depth_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">cropped_image</span></div>
+
+
+<div class="viewcode-block" id="visualize_data">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.visualize_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">visualize_data</span><span class="p">(</span><span class="n">color_image</span><span class="p">,</span> <span class="n">depth_image</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Visualizes the color and depth images by combining them with a colormap.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        color_image (np.ndarray): The color image in RGB format.</span>
+<span class="sd">        depth_image (np.ndarray): The depth image in grayscale format.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">depth_colormap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">convertScaleAbs</span><span class="p">(</span><span class="n">depth_image</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_HOT</span><span class="p">)</span>
+    <span class="n">added_images</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">color_image</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">depth_colormap</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">merged_images</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">hconcat</span><span class="p">([</span><span class="n">color_image</span><span class="p">,</span> <span class="n">added_images</span><span class="p">])</span>
+
+    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;Original images&quot;</span><span class="p">,</span> <span class="n">merged_images</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">5000</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_pointcloud_map">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.get_pointcloud_map">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_pointcloud_map</span><span class="p">(</span><span class="n">pointcloud_msg</span><span class="p">,</span> <span class="n">image_height</span><span class="p">,</span> <span class="n">image_width</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Processes a ROS point cloud message to extract 3D points and RGB data, visualize the point cloud,</span>
+<span class="sd">    and convert it to a 2D OpenCV image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pointcloud_msg (sensor_msgs/PointCloud2): A ROS point cloud message containing 3D points and RGB data.</span>
+<span class="sd">        image_height (int): Height of the output image.</span>
+<span class="sd">        image_width (int): Width of the output image.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: A numpy array containing the 3D points (XYZ) and RGB data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">height</span> <span class="o">=</span> <span class="n">pointcloud_msg</span><span class="o">.</span><span class="n">height</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">pointcloud_msg</span><span class="o">.</span><span class="n">width</span>
+    <span class="n">dtype_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">pointcloud_data</span> <span class="o">=</span> <span class="n">pc2</span><span class="o">.</span><span class="n">read_points</span><span class="p">(</span><span class="n">pointcloud_msg</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span><span class="s2">&quot;rgb&quot;</span><span class="p">),</span> <span class="n">skip_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pointcloud_data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Extract XYZ and RGB components</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(((</span><span class="n">rgb</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">,</span> <span class="p">(</span><span class="n">rgb</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">,</span> <span class="n">rgb</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+
+    <span class="c1"># Create Open3D point cloud</span>
+    <span class="n">pcd</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">PointCloud</span><span class="p">()</span>
+    <span class="n">pcd</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">xyz</span><span class="p">)</span>
+    <span class="n">pcd</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span>
+
+    <span class="c1"># Visualize point cloud</span>
+    <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_geometries</span><span class="p">([</span><span class="n">pcd</span><span class="p">])</span>
+
+    <span class="c1"># Convert Open3D point cloud to OpenCV image</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">pointcloud_to_image</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">rgb</span><span class="p">,</span> <span class="n">image_height</span><span class="p">,</span> <span class="n">image_width</span><span class="p">)</span>
+
+    <span class="c1">#cv2.imshow(&#39;Point cloud&#39;, image)</span>
+    <span class="c1">#cv2.waitKey(5000)</span>
+
+    <span class="k">return</span> <span class="n">points</span></div>
+
+
+<div class="viewcode-block" id="pointcloud_to_image">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.data_extraction.pointcloud_to_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pointcloud_to_image</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">rgb</span><span class="p">,</span> <span class="n">image_height</span><span class="p">,</span> <span class="n">image_width</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert point cloud data to a 2D image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xyz (np.ndarray): Array of 3D coordinates (N, 3).</span>
+<span class="sd">        rgb (np.ndarray): Array of RGB values (N, 3).</span>
+<span class="sd">        image_height (int): Height of the output image.</span>
+<span class="sd">        image_width (int): Width of the output image.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: 2D image created from the point cloud data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize an empty image</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">image_height</span><span class="p">,</span> <span class="n">image_width</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="c1"># Normalize the xyz coordinates to fit within the image dimensions</span>
+    <span class="n">xyz_normalized</span> <span class="o">=</span> <span class="p">(</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">xyz</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">xyz</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">xyz</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">xyz_normalized</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="n">image_width</span>
+    <span class="n">xyz_normalized</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="n">image_height</span>
+
+    <span class="c1"># Populate the image with the RGB values</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">xyz</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xyz_normalized</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xyz_normalized</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">image_width</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">image_height</span><span class="p">:</span>
+            <span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">rgb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

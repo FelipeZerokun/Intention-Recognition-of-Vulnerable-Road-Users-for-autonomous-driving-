@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modules &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=34cd777e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="data_extraction package" href="data_extraction.html" />
+    <link rel="prev" title="Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_extraction.html">data_extraction package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html">data_loader package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">datasets package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Modules</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data_extraction.html">data_extraction package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_extraction.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_extraction.html#module-data_extraction.data_extraction">data_extraction.data_extraction module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.convert_depth2image"><code class="docutils literal notranslate"><span class="pre">convert_depth2image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_ECEF_position"><code class="docutils literal notranslate"><span class="pre">get_ECEF_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_NED_position"><code class="docutils literal notranslate"><span class="pre">get_NED_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_camera_info"><code class="docutils literal notranslate"><span class="pre">get_camera_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_color_image"><code class="docutils literal notranslate"><span class="pre">get_color_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_depth_image"><code class="docutils literal notranslate"><span class="pre">get_depth_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_llh_position"><code class="docutils literal notranslate"><span class="pre">get_llh_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_odometry"><code class="docutils literal notranslate"><span class="pre">get_odometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_pointcloud_map"><code class="docutils literal notranslate"><span class="pre">get_pointcloud_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.get_velocity"><code class="docutils literal notranslate"><span class="pre">get_velocity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.pointcloud_to_image"><code class="docutils literal notranslate"><span class="pre">pointcloud_to_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.data_extraction.visualize_data"><code class="docutils literal notranslate"><span class="pre">visualize_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_extraction.html#module-data_extraction.rosbags_manager">data_extraction.rosbags_manager module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager"><code class="docutils literal notranslate"><span class="pre">RosbagManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.path"><code class="docutils literal notranslate"><span class="pre">RosbagManager.path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.name"><code class="docutils literal notranslate"><span class="pre">RosbagManager.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.file"><code class="docutils literal notranslate"><span class="pre">RosbagManager.file</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.bag"><code class="docutils literal notranslate"><span class="pre">RosbagManager.bag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.check_bag"><code class="docutils literal notranslate"><span class="pre">RosbagManager.check_bag()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.extract_all_data"><code class="docutils literal notranslate"><span class="pre">RosbagManager.extract_all_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.extract_stereo_data"><code class="docutils literal notranslate"><span class="pre">RosbagManager.extract_stereo_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.extract_video"><code class="docutils literal notranslate"><span class="pre">RosbagManager.extract_video()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.RosbagManager.reindex_bag"><code class="docutils literal notranslate"><span class="pre">RosbagManager.reindex_bag()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="data_extraction.html#data_extraction.rosbags_manager.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_extraction.html#module-data_extraction">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_loader.html">data_loader package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#module-data_loader.action_recognition_dataset">data_loader.action_recognition_dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset.data_dir"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset.data_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset.check_intent"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset.check_intent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset.transform"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset.transform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset.sequence_length"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset.sequence_length</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset.labels"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset.labels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.action_recognition_dataset.ActionRecognitionDataset.data"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset.data</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#module-data_loader.intent_prediction_dataset">data_loader.intent_prediction_dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.samples"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.labels"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.labels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.sequence_length"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.sequence_length</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.action_recognition"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.action_recognition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.action"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.action</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.normalize"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.mean"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.std"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.from_existing"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset.from_existing()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.intent_prediction_dataset.compute_normalization_stats"><code class="docutils literal notranslate"><span class="pre">compute_normalization_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#module-data_loader.multi_modal_dataset">data_loader.multi_modal_dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.dataset_dir"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.dataset_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.transform"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.transform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.sequence_length"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.sequence_length</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.normalize"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.mean"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.std"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.using_action_recognition"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.using_action_recognition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.action"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.action</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.MultiModalDataset.samples"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset.samples</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.multi_modal_dataset.compute_normalization_stats"><code class="docutils literal notranslate"><span class="pre">compute_normalization_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#module-data_loader.split_dataset_AR">data_loader.split_dataset_AR module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.split_dataset_AR.load_test_sample"><code class="docutils literal notranslate"><span class="pre">load_test_sample()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.split_dataset_AR.split_dataset_AR"><code class="docutils literal notranslate"><span class="pre">split_dataset_AR()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#module-data_loader.split_dataset_IP">data_loader.split_dataset_IP module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_loader.html#data_loader.split_dataset_IP.split_dataset"><code class="docutils literal notranslate"><span class="pre">split_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html#module-data_loader">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">datasets package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#module-datasets.class_analysis">datasets.class_analysis module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.class_dir"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.class_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.class_name"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.class_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.pedestrian_number"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.pedestrian_number</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.csv_dir"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.csv_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.class_data"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.class_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.check_images_in_folder"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.check_images_in_folder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.check_images_with_timestamp"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.check_images_with_timestamp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.check_pedestrian_number"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.check_pedestrian_number()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.class_analysis.ClassAnalysis.find_image_with_timestamp"><code class="docutils literal notranslate"><span class="pre">ClassAnalysis.find_image_with_timestamp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.class_analysis.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#module-datasets.data_augmentation">datasets.data_augmentation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.dataset_dir"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.dataset_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.transformations"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.transformations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.classes"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.classes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.total_classes"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.total_classes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.check_classes"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.check_classes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.augment_data"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.augment_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.augment_frame"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.augment_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#id0"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.check_classes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.data_augmentation.ClassAugmentation.copy_csv_file"><code class="docutils literal notranslate"><span class="pre">ClassAugmentation.copy_csv_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.data_augmentation.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#module-datasets.dataset_manager">datasets.dataset_manager module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager"><code class="docutils literal notranslate"><span class="pre">DatasetManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.data_path"><code class="docutils literal notranslate"><span class="pre">DatasetManager.data_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.source"><code class="docutils literal notranslate"><span class="pre">DatasetManager.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.output_folder"><code class="docutils literal notranslate"><span class="pre">DatasetManager.output_folder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.frames_data"><code class="docutils literal notranslate"><span class="pre">DatasetManager.frames_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.camera_info"><code class="docutils literal notranslate"><span class="pre">DatasetManager.camera_info</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.image_size"><code class="docutils literal notranslate"><span class="pre">DatasetManager.image_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.camera_intrinsics"><code class="docutils literal notranslate"><span class="pre">DatasetManager.camera_intrinsics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.model"><code class="docutils literal notranslate"><span class="pre">DatasetManager.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.tracker"><code class="docutils literal notranslate"><span class="pre">DatasetManager.tracker</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.pedestrian_counter"><code class="docutils literal notranslate"><span class="pre">DatasetManager.pedestrian_counter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.start_timestamp"><code class="docutils literal notranslate"><span class="pre">DatasetManager.start_timestamp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.get_camera_info"><code class="docutils literal notranslate"><span class="pre">DatasetManager.get_camera_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.check_correct_frames_data"><code class="docutils literal notranslate"><span class="pre">DatasetManager.check_correct_frames_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.create_classes_for_action_recognition"><code class="docutils literal notranslate"><span class="pre">DatasetManager.create_classes_for_action_recognition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.create_classes_for_intent_prediction"><code class="docutils literal notranslate"><span class="pre">DatasetManager.create_classes_for_intent_prediction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.action_analysis"><code class="docutils literal notranslate"><span class="pre">DatasetManager.action_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#id1"><code class="docutils literal notranslate"><span class="pre">DatasetManager.action_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#id2"><code class="docutils literal notranslate"><span class="pre">DatasetManager.check_correct_frames_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.combine_rgb_depth_frames"><code class="docutils literal notranslate"><span class="pre">DatasetManager.combine_rgb_depth_frames()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#id3"><code class="docutils literal notranslate"><span class="pre">DatasetManager.create_classes_for_action_recognition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#id4"><code class="docutils literal notranslate"><span class="pre">DatasetManager.create_classes_for_intent_prediction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#id5"><code class="docutils literal notranslate"><span class="pre">DatasetManager.get_camera_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.save_frames"><code class="docutils literal notranslate"><span class="pre">DatasetManager.save_frames()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.dataset_manager.DatasetManager.track_pedestrians"><code class="docutils literal notranslate"><span class="pre">DatasetManager.track_pedestrians()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.dataset_manager.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#module-datasets.frames_extraction">datasets.frames_extraction module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.frames_extraction.FrameExtractor"><code class="docutils literal notranslate"><span class="pre">FrameExtractor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.frames_extraction.FrameExtractor.extract_frames_single"><code class="docutils literal notranslate"><span class="pre">FrameExtractor.extract_frames_single()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.frames_extraction.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#module-datasets.navigation_data_modifier">datasets.navigation_data_modifier module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier"><code class="docutils literal notranslate"><span class="pre">DataModifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.filename"><code class="docutils literal notranslate"><span class="pre">DataModifier.filename</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.column_to_change"><code class="docutils literal notranslate"><span class="pre">DataModifier.column_to_change</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.initial_value"><code class="docutils literal notranslate"><span class="pre">DataModifier.initial_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.new_value"><code class="docutils literal notranslate"><span class="pre">DataModifier.new_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.data"><code class="docutils literal notranslate"><span class="pre">DataModifier.data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.change_column_value"><code class="docutils literal notranslate"><span class="pre">DataModifier.change_column_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="datasets.html#datasets.navigation_data_modifier.DataModifier.save_changes"><code class="docutils literal notranslate"><span class="pre">DataModifier.save_changes()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html#module-datasets">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_extraction.html" class="btn btn-neutral float-right" title="data_extraction package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

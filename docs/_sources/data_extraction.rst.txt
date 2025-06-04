@@ -1,0 +1,29 @@
+data\_extraction package
+========================
+
+Submodules
+----------
+
+data\_extraction.data\_extraction module
+----------------------------------------
+
+.. automodule:: data_extraction.data_extraction
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+data\_extraction.rosbags\_manager module
+----------------------------------------
+
+.. automodule:: data_extraction.rosbags_manager
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: data_extraction
+   :members:
+   :show-inheritance:
+   :undoc-members:

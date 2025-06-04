@@ -1,0 +1,611 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_loader package &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=34cd777e"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="datasets package" href="datasets.html" />
+    <link rel="prev" title="data_extraction package" href="data_extraction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data_extraction.html">data_extraction package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">data_loader package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_loader.action_recognition_dataset">data_loader.action_recognition_dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset"><code class="docutils literal notranslate"><span class="pre">ActionRecognitionDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_loader.intent_prediction_dataset">data_loader.intent_prediction_dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset"><code class="docutils literal notranslate"><span class="pre">IntentPredictionDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.intent_prediction_dataset.compute_normalization_stats"><code class="docutils literal notranslate"><span class="pre">compute_normalization_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_loader.multi_modal_dataset">data_loader.multi_modal_dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.multi_modal_dataset.MultiModalDataset"><code class="docutils literal notranslate"><span class="pre">MultiModalDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.multi_modal_dataset.compute_normalization_stats"><code class="docutils literal notranslate"><span class="pre">compute_normalization_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_loader.split_dataset_AR">data_loader.split_dataset_AR module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.split_dataset_AR.load_test_sample"><code class="docutils literal notranslate"><span class="pre">load_test_sample()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.split_dataset_AR.split_dataset_AR"><code class="docutils literal notranslate"><span class="pre">split_dataset_AR()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_loader.split_dataset_IP">data_loader.split_dataset_IP module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data_loader.split_dataset_IP.split_dataset"><code class="docutils literal notranslate"><span class="pre">split_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-data_loader">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">datasets package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
+      <li class="breadcrumb-item active">data_loader package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/data_loader.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-loader-package">
+<h1>data_loader package<a class="headerlink" href="#data-loader-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-data_loader.action_recognition_dataset">
+<span id="data-loader-action-recognition-dataset-module"></span><h2>data_loader.action_recognition_dataset module<a class="headerlink" href="#module-data_loader.action_recognition_dataset" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_loader.action_recognition_dataset.</span></span><span class="sig-name descname"><span class="pre">ActionRecognitionDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/action_recognition_dataset.html#ActionRecognitionDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>A PyTorch Dataset for loading and processing action recognition data.</p>
+<p>This dataset is organized such that each action class contains directories of clips,
+and each clip contains a sequence of frames. It supports sequence extraction and
+optional transformations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset.data_dir">
+<span class="sig-name descname"><span class="pre">data_dir</span></span><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset.data_dir" title="Link to this definition"></a></dt>
+<dd><p>Path to the dataset directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset.check_intent">
+<span class="sig-name descname"><span class="pre">check_intent</span></span><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset.check_intent" title="Link to this definition"></a></dt>
+<dd><p>Whether to use intent-based labeling (True to enable).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformations to apply to the frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset.sequence_length">
+<span class="sig-name descname"><span class="pre">sequence_length</span></span><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset.sequence_length" title="Link to this definition"></a></dt>
+<dd><p>Length of the frame sequences to extract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset.labels" title="Link to this definition"></a></dt>
+<dd><p>Mapping of class indices to action labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.action_recognition_dataset.ActionRecognitionDataset.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#data_loader.action_recognition_dataset.ActionRecognitionDataset.data" title="Link to this definition"></a></dt>
+<dd><p>List of tuples containing frame sequences and their corresponding labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-data_loader.intent_prediction_dataset">
+<span id="data-loader-intent-prediction-dataset-module"></span><h2>data_loader.intent_prediction_dataset module<a class="headerlink" href="#module-data_loader.intent_prediction_dataset" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_loader.intent_prediction_dataset.</span></span><span class="sig-name descname"><span class="pre">IntentPredictionDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/intent_prediction_dataset.html#IntentPredictionDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>A PyTorch Dataset for loading and processing sequential data for pedestrian intent prediction.</p>
+<p>This dataset processes CSV files containing features such as robot positions, velocities, bounding
+boxes, distances, and actions. It supports sequence extraction, optional normalization, and
+action recognition.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.samples">
+<span class="sig-name descname"><span class="pre">samples</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.samples" title="Link to this definition"></a></dt>
+<dd><p>List of data sequences extracted from the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.labels" title="Link to this definition"></a></dt>
+<dd><p>List of labels corresponding to the sequences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.sequence_length">
+<span class="sig-name descname"><span class="pre">sequence_length</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.sequence_length" title="Link to this definition"></a></dt>
+<dd><p>Length of the sequences to extract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.action_recognition">
+<span class="sig-name descname"><span class="pre">action_recognition</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.action_recognition" title="Link to this definition"></a></dt>
+<dd><p>Whether to use action recognition mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.action">
+<span class="sig-name descname"><span class="pre">action</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.action" title="Link to this definition"></a></dt>
+<dd><p>Action value to use in action recognition mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.normalize" title="Link to this definition"></a></dt>
+<dd><p>Whether to normalize the features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.mean" title="Link to this definition"></a></dt>
+<dd><p>Mean values for normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.std">
+<span class="sig-name descname"><span class="pre">std</span></span><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.std" title="Link to this definition"></a></dt>
+<dd><p>Standard deviation values for normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.IntentPredictionDataset.from_existing">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_existing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/intent_prediction_dataset.html#IntentPredictionDataset.from_existing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.intent_prediction_dataset.IntentPredictionDataset.from_existing" title="Link to this definition"></a></dt>
+<dd><p>Creates an instance of the class using existing data attributes.</p>
+<p>This method is used to initialize a class object with pre-existing data
+parameters such as samples, labels, and optional normalization parameters.
+The function bypasses the <cite>__init__</cite> method and manually assigns attributes
+to the class instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> – list
+A list of input data samples that define the dataset.</p></li>
+<li><p><strong>labels</strong> – list
+A list of corresponding labels for the given samples.</p></li>
+<li><p><strong>normalize</strong> – bool, optional
+A flag indicating whether the data should be normalized. Defaults to True.</p></li>
+<li><p><strong>mean</strong> – float, optional
+The mean value for normalization. Used if normalization is enabled.</p></li>
+<li><p><strong>std</strong> – float, optional
+The standard deviation value for normalization. Used if normalization is enabled.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>cls</dt><dd><p>An instance of the class initialized with the provided data attributes.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_loader.intent_prediction_dataset.compute_normalization_stats">
+<span class="sig-prename descclassname"><span class="pre">data_loader.intent_prediction_dataset.</span></span><span class="sig-name descname"><span class="pre">compute_normalization_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/intent_prediction_dataset.html#compute_normalization_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.intent_prediction_dataset.compute_normalization_stats" title="Link to this definition"></a></dt>
+<dd><p>Computes normalization statistics (mean and standard deviation) for the given dataset.</p>
+<p>The function extracts multiple features from the dataset’s sequences including robot
+positions, velocities, speed, bounding boxes, positional data, distance, and actions.
+These features are concatenated to form a feature matrix, from which the mean and
+standard deviation are computed along each feature dimension to facilitate normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset</strong> – A dataset object containing sequences of data samples. Each sample is
+expected to have fields such as ‘robot_position’, ‘robot_velocity’,
+‘bounding_box’, ‘position’, ‘distance’, and ‘action’.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing two numpy arrays:</dt><dd><ul class="simple">
+<li><p>mean: The mean of each feature across all sequences in the dataset.</p></li>
+<li><p>std: The standard deviation of each feature across all sequences in the dataset.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-data_loader.multi_modal_dataset">
+<span id="data-loader-multi-modal-dataset-module"></span><h2>data_loader.multi_modal_dataset module<a class="headerlink" href="#module-data_loader.multi_modal_dataset" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_loader.multi_modal_dataset.</span></span><span class="sig-name descname"><span class="pre">MultiModalDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/multi_modal_dataset.html#MultiModalDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>A PyTorch Dataset for loading and processing multimodal data. The dataset combines visual
+data (frames) and sequential features extracted from CSV files. It supports sequence extraction,
+optional normalization, and action recognition.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.dataset_dir">
+<span class="sig-name descname"><span class="pre">dataset_dir</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.dataset_dir" title="Link to this definition"></a></dt>
+<dd><p>Path to the dataset directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformations to apply to the frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.sequence_length">
+<span class="sig-name descname"><span class="pre">sequence_length</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.sequence_length" title="Link to this definition"></a></dt>
+<dd><p>Length of the frame and feature sequences to extract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.normalize" title="Link to this definition"></a></dt>
+<dd><p>Whether to normalize the features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.mean" title="Link to this definition"></a></dt>
+<dd><p>Mean values for normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.std">
+<span class="sig-name descname"><span class="pre">std</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.std" title="Link to this definition"></a></dt>
+<dd><p>Standard deviation values for normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.using_action_recognition">
+<span class="sig-name descname"><span class="pre">using_action_recognition</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.using_action_recognition" title="Link to this definition"></a></dt>
+<dd><p>Whether to use action recognition mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.action">
+<span class="sig-name descname"><span class="pre">action</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.action" title="Link to this definition"></a></dt>
+<dd><p>Action value to use in action recognition mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.MultiModalDataset.samples">
+<span class="sig-name descname"><span class="pre">samples</span></span><a class="headerlink" href="#data_loader.multi_modal_dataset.MultiModalDataset.samples" title="Link to this definition"></a></dt>
+<dd><p>List of tuples containing frame paths, feature sequences, and labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_loader.multi_modal_dataset.compute_normalization_stats">
+<span class="sig-prename descclassname"><span class="pre">data_loader.multi_modal_dataset.</span></span><span class="sig-name descname"><span class="pre">compute_normalization_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/multi_modal_dataset.html#compute_normalization_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.multi_modal_dataset.compute_normalization_stats" title="Link to this definition"></a></dt>
+<dd><p>Computes the normalization statistics (mean and standard deviation) for the features extracted
+from the provided dataset. The function processes all samples in the dataset, retrieves the
+features for each sample, and calculates the mean and standard deviation across all features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset</strong> – The dataset object that provides access to samples and a feature extraction
+mechanism. It is expected to contain a <cite>samples</cite> attribute providing sequence
+data and an <cite>_extract_features</cite> method to extract features for each sequence.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple where the first element is a NumPy array</dt><dd><p>representing the mean values of the features, and the second element is a NumPy
+array representing the standard deviation of the features.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-data_loader.split_dataset_AR">
+<span id="data-loader-split-dataset-ar-module"></span><h2>data_loader.split_dataset_AR module<a class="headerlink" href="#module-data_loader.split_dataset_AR" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="data_loader.split_dataset_AR.load_test_sample">
+<span class="sig-prename descclassname"><span class="pre">data_loader.split_dataset_AR.</span></span><span class="sig-name descname"><span class="pre">load_test_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/split_dataset_AR.html#load_test_sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.split_dataset_AR.load_test_sample" title="Link to this definition"></a></dt>
+<dd><p>Loads a test sample consisting of a sequence of images and corresponding metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_folder</strong> (<em>str</em>) – Path to the folder containing the images.</p></li>
+<li><p><strong>csv_file</strong> (<em>str</em>) – Path to the CSV file containing metadata.</p></li>
+<li><p><strong>transform</strong> (<em>callable</em>) – Transformations to apply to the images.</p></li>
+<li><p><strong>sequence_length</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of images to include in the sequence. Defaults to 16.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>image_tensor (torch.Tensor): A tensor of shape (1, 3, T, H, W) representing the image sequence.</p></li>
+<li><p>csv_data (pandas.DataFrame): The metadata loaded from the CSV file.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_loader.split_dataset_AR.split_dataset_AR">
+<span class="sig-prename descclassname"><span class="pre">data_loader.split_dataset_AR.</span></span><span class="sig-name descname"><span class="pre">split_dataset_AR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_lenght</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.7,</span> <span class="pre">0.15,</span> <span class="pre">0.15)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/split_dataset_AR.html#split_dataset_AR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.split_dataset_AR.split_dataset_AR" title="Link to this definition"></a></dt>
+<dd><p>Splits the action recognition dataset into training, validation, and test sets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_dir</strong> (<em>str</em>) – Path to the dataset directory.</p></li>
+<li><p><strong>clip_lenght</strong> (<em>int</em><em>, </em><em>optional</em>) – Length of the video clips to extract. Defaults to 16.</p></li>
+<li><p><strong>split_ratios</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Ratios for splitting the dataset into train, validation, and test sets. Defaults to (0.7, 0.15, 0.15).</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed for reproducibility. Defaults to 42.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the training, validation, and test datasets as <cite>ActionRecognitionDataset</cite> objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-data_loader.split_dataset_IP">
+<span id="data-loader-split-dataset-ip-module"></span><h2>data_loader.split_dataset_IP module<a class="headerlink" href="#module-data_loader.split_dataset_IP" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="data_loader.split_dataset_IP.split_dataset">
+<span class="sig-prename descclassname"><span class="pre">data_loader.split_dataset_IP.</span></span><span class="sig-name descname"><span class="pre">split_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_loader/split_dataset_IP.html#split_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_loader.split_dataset_IP.split_dataset" title="Link to this definition"></a></dt>
+<dd><p>Splits the dataset into training, validation, and test sets.</p>
+<p>This function loads the dataset, computes normalization statistics, shuffles the data,
+and splits it into training, validation, and test subsets based on the specified ratios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_dir</strong> (<em>str</em>) – Path to the dataset directory.</p></li>
+<li><p><strong>sequence_length</strong> (<em>int</em><em>, </em><em>optional</em>) – Length of the sequences to extract. Defaults to 16.</p></li>
+<li><p><strong>normalize</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize the dataset. Defaults to True.</p></li>
+<li><p><strong>val_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Proportion of the dataset to use for validation. Defaults to 0.2.</p></li>
+<li><p><strong>test_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Proportion of the dataset to use for testing. Defaults to 0.1.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed for reproducibility. Defaults to 42.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the training, validation, and test datasets as <cite>IntentPredictionDataset</cite> objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-data_loader">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-data_loader" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data_extraction.html" class="btn btn-neutral float-left" title="data_extraction package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="datasets.html" class="btn btn-neutral float-right" title="datasets package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

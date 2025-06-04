@@ -1,0 +1,720 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>datasets.dataset_manager &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=34cd777e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">datasets.dataset_manager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for datasets.dataset_manager</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">deep_sort_realtime.deepsort_tracker</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeepSort</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">project_utils.project_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">check_path</span><span class="p">,</span>
+    <span class="n">check_file</span><span class="p">,</span>
+    <span class="n">check_os_windows</span><span class="p">,</span>
+    <span class="n">get_data</span><span class="p">,</span>
+    <span class="n">estimate_pedestrian_distance</span><span class="p">,</span>
+    <span class="n">estimate_pedestrian_position</span><span class="p">,</span>
+    <span class="n">save_csv_file</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="DatasetManager">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to manage datasets for human action and intent recognition.</span>
+<span class="sd">    It uses data extracted from RGB and depth frames, along with YOLOv5 for detection.</span>
+
+
+<span class="sd">    This class handles loading and validating sensor and image data, tracking pedestrians using</span>
+<span class="sd">    YOLOv5 and DeepSORT, and providing interactive tools for manually labeling pedestrian actions</span>
+<span class="sd">    and intentions. It supports creating datasets for both Action Recognition and Intent Prediction</span>
+<span class="sd">    models by combining RGB and depth information and saving pedestrian-specific data sequences.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data_path (str): Path to the dataset directory.</span>
+<span class="sd">        source (str): Name of the video or source folder.</span>
+<span class="sd">        output_folder (str): Path to the output folder for saving processed data.</span>
+<span class="sd">        frames_data (Path): Path to the navigation data CSV file.</span>
+<span class="sd">        camera_info (Path): Path to the camera information CSV file.</span>
+<span class="sd">        image_size (List[int]): Image dimensions [height, width].</span>
+<span class="sd">        camera_intrinsics (np.ndarray): Intrinsic camera matrix.</span>
+<span class="sd">        model (torch.nn.Module): Pretrained YOLOv5 model for pedestrian detection.</span>
+<span class="sd">        tracker (DeepSort): DeepSort tracker for pedestrian tracking.</span>
+<span class="sd">        pedestrian_counter (int): Counter for pedestrian identification.</span>
+<span class="sd">        start_timestamp (int): Initial timestamp for filtering frames.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        get_camera_info():</span>
+<span class="sd">            Loads camera parameters including image size and intrinsic matrix.</span>
+
+<span class="sd">        check_correct_frames_data():</span>
+<span class="sd">            Validates that all required columns exist in the navigation CSV file.</span>
+
+<span class="sd">        create_classes_for_action_recognition():</span>
+<span class="sd">            Interactive method to annotate sequences for action recognition, allowing the user</span>
+<span class="sd">            to view frame pairs and define action segments.</span>
+
+<span class="sd">        create_classes_for_intent_prediction():</span>
+<span class="sd">            Similar to action class creation, but prompts intent labeling for each pedestrian</span>
+<span class="sd">            based on visual and distance cues.</span>
+
+<span class="sd">        action_analysis():</span>
+<span class="sd">            Processes all pedestrian detections within a timestamp window to confirm pedestrian</span>
+<span class="sd">            presence, estimate distance and position, and prompt the user to annotate their</span>
+<span class="sd">            actions and intentions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the DatasetManager by setting paths, loading YOLOv5 and DeepSORT models,</span>
+<span class="sd">        and preparing camera info data.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            data_path (str): Path to the dataset directory.</span>
+<span class="sd">            video (str): Name of the video or source folder.</span>
+<span class="sd">            output_folder (str): Path to the output folder for saving processed data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_DATA_COLUMNS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot odometry&#39;</span><span class="p">,</span> <span class="s1">&#39;rgb_frame&#39;</span><span class="p">,</span> <span class="s1">&#39;depth_frame&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames_data</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span><span class="n">video</span><span class="p">,</span> <span class="s1">&#39;navigation_data.csv&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_info</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="s1">&#39;camera_info.csv&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">data_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">video</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_info</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_info</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_intrinsics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_camera_info</span><span class="p">()</span>
+
+        <span class="c1"># Lad both the YoloV5 model and the DeepSort tracker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;ultralytics/yolov5&#39;</span><span class="p">,</span> <span class="s1">&#39;yolov5s&#39;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DeepSort</span><span class="p">(</span>
+            <span class="n">max_age</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">nn_budget</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+            <span class="n">nms_max_overlap</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames_data</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_data</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">check_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_data</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_folder</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="n">output_folder</span><span class="p">)</span>
+        <span class="n">check_path</span><span class="p">(</span><span class="n">folder_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pedestrian_counter</span> <span class="o">=</span> <span class="mi">9</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_timestamp</span> <span class="o">=</span> <span class="mi">1683276896237854159</span>
+
+<div class="viewcode-block" id="DatasetManager.get_camera_info">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.get_camera_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_camera_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads camera parameters from a CSV file, including image size and intrinsic camera matrix.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[List[int], np.ndarray]: A tuple containing the image size as a list [height, width]</span>
+<span class="sd">            and the intrinsic camera matrix as a numpy array.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">camera_info</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_info</span><span class="p">)</span>
+        <span class="n">image_height</span> <span class="o">=</span> <span class="n">camera_info</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;image_height&#39;</span><span class="p">]</span>
+        <span class="n">image_width</span> <span class="o">=</span> <span class="n">camera_info</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;image_width&#39;</span><span class="p">]</span>
+
+        <span class="n">intrinsic_matrix_str</span> <span class="o">=</span> <span class="n">camera_info</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;Intrinsic_camera_matrix&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Convert the string representation of the matrix to a numpy array</span>
+        <span class="n">intrinsic_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">intrinsic_matrix_str</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;[]&#39;</span><span class="p">),</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">([</span><span class="n">image_height</span><span class="p">,</span> <span class="n">image_width</span><span class="p">],</span> <span class="n">intrinsic_matrix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetManager.check_correct_frames_data">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.check_correct_frames_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_correct_frames_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates that the frames data CSV file contains all required columns for processing.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: The DataFrame containing the frames data if validation is successful.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If any required column is missing from the frames data CSV file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">frame_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_data</span><span class="p">)</span>
+
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">frame_data</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DATA_COLUMNS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Column </span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s1"> not found in the frames data CSV file.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">frame_data</span></div>
+
+
+<div class="viewcode-block" id="DatasetManager.create_classes_for_action_recognition">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.create_classes_for_action_recognition">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_classes_for_action_recognition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launches a manual annotation interface to label frame sequences for pedestrian action.</span>
+
+<span class="sd">        The user can label actions for pedestrians detected in the frames, and the sequences are saved</span>
+<span class="sd">        in the specified output folder.</span>
+<span class="sd">            - Use &#39;a&#39; to move to the previous frame.</span>
+<span class="sd">            - Use &#39;d&#39; to move to the next frame.</span>
+<span class="sd">            - Use &#39;r&#39; to start/stop recording a sequence of frames.</span>
+<span class="sd">            - The frames between the start and end timestamps will be analyzed for pedestrians action.</span>
+<span class="sd">            - End timestamp must be greater than the start timestamp.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frame_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_correct_frames_data</span><span class="p">()</span>
+        <span class="n">frame_data</span> <span class="o">=</span> <span class="n">frame_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_timestamp</span><span class="p">]</span>
+        <span class="n">color_frames</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;rgb_frame&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">depth_frames</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;depth_frame&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">timestamps</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">recording</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">start_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">end_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">frame_path</span> <span class="o">=</span> <span class="n">color_frames</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">depth_path</span> <span class="o">=</span> <span class="n">depth_frames</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">frame_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">frame_path</span><span class="p">)</span>
+            <span class="n">depth_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">depth_path</span><span class="p">)</span>
+
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">frame_path</span><span class="p">)</span>
+            <span class="n">depth_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">depth_path</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_UNCHANGED</span><span class="p">)</span>
+
+            <span class="n">added_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_rgb_depth_frames</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">depth_map</span><span class="p">,</span> <span class="n">depth_threshold</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;Frame viewer&#39;</span><span class="p">,</span> <span class="n">added_images</span><span class="p">)</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mi">27</span><span class="p">:</span> <span class="c1">#ESC key</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">recording</span><span class="p">:</span>
+                    <span class="n">recording</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">start_timestamp</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Start action recording at </span><span class="si">{</span><span class="n">start_timestamp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="n">recording</span><span class="p">:</span>
+                    <span class="n">recording</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">end_timestamp</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Stop Recording at </span><span class="si">{</span><span class="n">end_timestamp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">start_timestamp</span> <span class="o">&gt;=</span> <span class="n">end_timestamp</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;End timestamp must be greater than start timestamp.&#39;</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyWindow</span><span class="p">(</span><span class="s1">&#39;Frame viewer&#39;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pedestrian_counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_analysis</span><span class="p">(</span><span class="n">frame_data</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">,</span>
+                                                                       <span class="bp">self</span><span class="o">.</span><span class="n">pedestrian_counter</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Already at the first frame.&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">color_frames</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Already at the last frame.&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">):</span>
+                <span class="k">break</span></div>
+
+
+<div class="viewcode-block" id="DatasetManager.create_classes_for_intent_prediction">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.create_classes_for_intent_prediction">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_classes_for_intent_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launches a manual annotation interface to label frame sequences for pedestrian intent.</span>
+<span class="sd">        The user can label actions for pedestrians detected in the frames, and the sequences are saved</span>
+<span class="sd">        in the specified output folder.</span>
+<span class="sd">            - Use &#39;a&#39; to move to the previous frame.</span>
+<span class="sd">            - Use &#39;d&#39; to move to the next frame.</span>
+<span class="sd">            - Use &#39;r&#39; to start/stop recording a sequence of frames.</span>
+<span class="sd">            - The frames between the start and end timestamps will be analyzed for pedestrians action AND intention.</span>
+<span class="sd">            - End timestamp must be greater than the start timestamp.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frame_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_correct_frames_data</span><span class="p">()</span>
+        <span class="n">frame_data</span> <span class="o">=</span> <span class="n">frame_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_timestamp</span><span class="p">]</span>
+        <span class="n">color_frames</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;rgb_frame&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">depth_frames</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;depth_frame&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">timestamps</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">recording</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">start_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">end_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">frame_path</span> <span class="o">=</span> <span class="n">color_frames</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">depth_path</span> <span class="o">=</span> <span class="n">depth_frames</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">frame_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">frame_path</span><span class="p">)</span>
+            <span class="n">depth_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">depth_path</span><span class="p">)</span>
+
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">frame_path</span><span class="p">)</span>
+            <span class="n">depth_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">depth_path</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_UNCHANGED</span><span class="p">)</span>
+
+            <span class="n">added_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_rgb_depth_frames</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">depth_map</span><span class="p">,</span> <span class="n">depth_threshold</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s1">&#39;Frame viewer&#39;</span><span class="p">,</span> <span class="n">added_images</span><span class="p">)</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mi">27</span><span class="p">:</span>  <span class="c1"># ESC key</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">recording</span><span class="p">:</span>
+                    <span class="n">recording</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">start_timestamp</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Start action recording at </span><span class="si">{</span><span class="n">start_timestamp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="n">recording</span><span class="p">:</span>
+                    <span class="n">recording</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">end_timestamp</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Stop Recording at </span><span class="si">{</span><span class="n">end_timestamp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">start_timestamp</span> <span class="o">&gt;=</span> <span class="n">end_timestamp</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;End timestamp must be greater than start timestamp.&#39;</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyWindow</span><span class="p">(</span><span class="s1">&#39;Frame viewer&#39;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pedestrian_counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_analysis</span><span class="p">(</span><span class="n">frame_data</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">,</span>
+                                                                       <span class="bp">self</span><span class="o">.</span><span class="n">pedestrian_counter</span><span class="p">,</span> <span class="n">check_intention</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Already at the first frame.&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">color_frames</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Already at the last frame.&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">):</span>
+                <span class="k">break</span></div>
+
+
+<div class="viewcode-block" id="DatasetManager.action_analysis">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.action_analysis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frame_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">start_timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">end_timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">pedestrian_counter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">check_intention</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyzes pedestrian behavior within a specific time window and stores</span>
+<span class="sd">        pedestrian labeled data based on manual input and automated tracking.</span>
+
+<span class="sd">        Pedestrians are detected using YOLOv5, tracked using DeepSORT, and filtered</span>
+<span class="sd">        based on detection confidence and distance from the robot. The user confirms</span>
+<span class="sd">        each detection and assigns a class label via terminal input.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame_data (pd.DataFrame): Frame metadata including timestamps and paths.</span>
+<span class="sd">            start_timestamp (str): Timestamp marking the start of the labeling segment.</span>
+<span class="sd">            end_timestamp (str): Timestamp marking the end of the labeling segment.</span>
+<span class="sd">            pedestrian_counter (int): Counter to index unique pedestrians.</span>
+<span class="sd">            check_intention (bool, optional): Whether to collect intention labels. Defaults to False.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Updated pedestrian counter after processing the segment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pedestrian_actions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">pedestrian_intents</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking pedestrian actions from </span><span class="si">{</span><span class="n">start_timestamp</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">end_timestamp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">frames_to_check</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[(</span><span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">start_timestamp</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end_timestamp</span><span class="p">)]</span>
+        <span class="n">checked_frames</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pedestrian_intent</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">frames_to_check</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">checked_frames</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking frame </span><span class="si">{</span><span class="n">checked_frames</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames_to_check</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pedestrians_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">color_frame_path</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;rgb_frame&#39;</span><span class="p">]</span>
+            <span class="n">depth_frame_path</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;depth_frame&#39;</span><span class="p">]</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span>
+            <span class="n">ned_coordinates</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Robot NED position&#39;</span><span class="p">]</span>
+            <span class="n">robot_velocity</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Robot estimated velocity&#39;</span><span class="p">]</span>
+
+            <span class="n">robot_position</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">ned_coordinates</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;NED&#39;</span><span class="p">)</span>
+            <span class="n">robot_velocity</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">robot_velocity</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;velocity&#39;</span><span class="p">)</span>
+
+
+            <span class="n">color_frame_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">color_frame_path</span><span class="p">)</span>
+            <span class="n">depth_frame_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">depth_frame_path</span><span class="p">)</span>
+
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">color_frame_path</span><span class="p">)</span>
+            <span class="n">depth_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">depth_frame_path</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_UNCHANGED</span><span class="p">)</span>
+
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="n">persons</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">xyxy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">results</span><span class="o">.</span><span class="n">xyxy</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pedestrians detected: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">persons</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">persons</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Zero persons detected!&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">persons</span><span class="p">:</span>
+                <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">confidence</span><span class="p">,</span> <span class="n">class_id</span> <span class="o">=</span> <span class="n">person</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span>
+                <span class="n">detection_data</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)],</span> <span class="n">confidence</span><span class="p">,</span> <span class="n">class_id</span><span class="p">]</span>
+
+                <span class="n">depth_values_of_roi</span> <span class="o">=</span> <span class="n">depth_map</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">)]</span>
+                <span class="n">pedestrian_image</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">)]</span>
+                <span class="n">pedestrian_distance</span> <span class="o">=</span> <span class="n">estimate_pedestrian_distance</span><span class="p">(</span><span class="n">depth_values_of_roi</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">confidence</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confidence too low&quot;</span><span class="p">)</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Is this a pedestrian? confidence: </span><span class="si">{</span><span class="n">confidence</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pedestrian_image</span><span class="p">)</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">):</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">pedestrian_distance</span> <span class="o">&gt;</span> <span class="mf">10.0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pedestrian a bit far away&quot;</span><span class="p">)</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Is pedestrian close enough? distance: </span><span class="si">{</span><span class="n">pedestrian_distance</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">,</span> <span class="n">pedestrian_image</span><span class="p">)</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">):</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+
+                <span class="n">pedestrians_in_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">detection_data</span><span class="p">)</span>
+
+            <span class="n">pedestrian_tracks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">track_pedestrians</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pedestrians_in_frame</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;object&quot;</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">pedestrian_tracks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">track</span><span class="o">.</span><span class="n">is_confirmed</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">track_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">track</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span> <span class="o">+</span> <span class="n">pedestrian_counter</span>
+                <span class="n">ltrb</span> <span class="o">=</span> <span class="n">track</span><span class="o">.</span><span class="n">to_tlbr</span><span class="p">()</span>
+                <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">ltrb</span><span class="p">)</span>
+                <span class="n">pedestrian_image</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">)]</span>
+                <span class="n">pedestrian_distance</span> <span class="o">=</span> <span class="n">estimate_pedestrian_distance</span><span class="p">(</span><span class="n">depth_map</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">):</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">)])</span>
+                <span class="n">pedestrian_position</span> <span class="o">=</span> <span class="n">estimate_pedestrian_position</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span>
+                                                                                        <span class="n">pedestrian_distance</span><span class="p">,</span>
+                                                                                        <span class="bp">self</span><span class="o">.</span><span class="n">camera_intrinsics</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pedestrian estimated position is </span><span class="si">{</span><span class="n">pedestrian_position</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pedestrian_</span><span class="si">{</span><span class="n">track_id</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">check_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pedestrian </span><span class="si">{</span><span class="n">track_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pedestrian_image</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">):</span>
+                        <span class="k">break</span>
+
+                    <span class="n">pedestrian_action</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Enter the pedestrian action: &quot;</span><span class="p">)</span>
+                    <span class="n">pedestrian_actions</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">pedestrian_action</span>
+                    <span class="n">pedestrian_intents</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                    <span class="k">if</span> <span class="n">check_intention</span><span class="p">:</span>
+                        <span class="n">pedestrian_intent</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Does the pedestrian intent to change their current action (</span><span class="si">{</span><span class="n">pedestrian_action</span><span class="si">}</span><span class="s2">? (0: No, 1: Yes)&quot;</span><span class="p">)</span>
+                        <span class="n">pedestrian_intents</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">pedestrian_intent</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+
+                    <span class="n">pedestrian_data</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                        <span class="s1">&#39;track_id&#39;</span><span class="p">:</span> <span class="n">track_id</span><span class="p">,</span>
+                        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                        <span class="s1">&#39;robot_position&#39;</span><span class="p">:</span> <span class="n">robot_position</span><span class="p">,</span>
+                        <span class="s1">&#39;robot_velocity&#39;</span><span class="p">:</span> <span class="n">robot_velocity</span><span class="p">,</span>
+                        <span class="s1">&#39;bounding_box&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">]),</span>
+                        <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="n">confidence</span><span class="p">,</span>
+                        <span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="n">pedestrian_distance</span><span class="p">,</span>
+                        <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">pedestrian_position</span><span class="p">,</span>
+                        <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="n">pedestrian_actions</span><span class="p">[</span><span class="n">track_id</span><span class="p">],</span>
+                        <span class="s1">&#39;intent&#39;</span><span class="p">:</span> <span class="n">pedestrian_intents</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span>
+                    <span class="p">}</span>
+
+                    <span class="c1"># save the data as csv file</span>
+
+                    <span class="n">save_path</span> <span class="o">=</span> <span class="n">save_csv_file</span><span class="p">(</span><span class="n">pedestrian_data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">save_path</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;pedestrian_</span><span class="si">{</span><span class="n">track_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">,</span> <span class="n">pedestrian_image</span><span class="p">)</span>
+
+
+                <span class="c1"># if the file already exists, open the csv file and append the new data</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pedestrian_data</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                        <span class="s1">&#39;track_id&#39;</span><span class="p">:</span> <span class="n">track_id</span><span class="p">,</span>
+                        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                        <span class="s1">&#39;robot_position&#39;</span><span class="p">:</span> <span class="n">robot_position</span><span class="p">,</span>
+                        <span class="s1">&#39;robot_velocity&#39;</span><span class="p">:</span> <span class="n">robot_velocity</span><span class="p">,</span>
+                        <span class="s1">&#39;bounding_box&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">],</span>
+                        <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="n">confidence</span><span class="p">,</span>
+                        <span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="n">pedestrian_distance</span><span class="p">,</span>
+                        <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">pedestrian_position</span><span class="p">,</span>
+                        <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="n">pedestrian_actions</span><span class="p">[</span><span class="n">track_id</span><span class="p">],</span>
+                        <span class="s1">&#39;intent&#39;</span><span class="p">:</span> <span class="n">pedestrian_intents</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span>
+                    <span class="p">}</span>
+
+
+                    <span class="c1"># save the data as csv file</span>
+                    <span class="n">save_path</span> <span class="o">=</span> <span class="n">save_csv_file</span><span class="p">(</span><span class="n">pedestrian_data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">save_path</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;pedestrian_</span><span class="si">{</span><span class="n">track_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">,</span> <span class="n">pedestrian_image</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">pedestrian_counter</span> <span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pedestrian_tracks</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="DatasetManager.track_pedestrians">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.track_pedestrians">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">track_pedestrians</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tracks pedestrians using the DeepSort tracker.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame (np.ndarray): The current video frame.</span>
+<span class="sd">            detections (np.ndarray): Array of detections in the current frame.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Any]: List of tracked pedestrian objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tracks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">update_tracks</span><span class="p">(</span><span class="n">detections</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tracks</span></div>
+
+
+
+<div class="viewcode-block" id="DatasetManager.combine_rgb_depth_frames">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.combine_rgb_depth_frames">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">combine_rgb_depth_frames</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">depth_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">depth_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combines an RGB frame and a depth map into a single image for visualization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame (np.ndarray): The RGB image.</span>
+<span class="sd">            depth_map (np.ndarray): The depth map corresponding to the RGB image.</span>
+<span class="sd">            depth_threshold (int, optional): Threshold to cap depth values. Defaults to 10000.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: Combined image with depth overlay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if values from the depth map are greater than 10000, make them 0</span>
+        <span class="n">depth_map</span><span class="p">[</span><span class="n">depth_map</span> <span class="o">&gt;</span> <span class="n">depth_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">depth_colormap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">convertScaleAbs</span><span class="p">(</span><span class="n">depth_map</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_HOT</span><span class="p">)</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="n">depth_colormap</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">combined</span></div>
+
+
+<div class="viewcode-block" id="DatasetManager.save_frames">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.DatasetManager.save_frames">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_frames</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">start_timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">end_timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">intent</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">pedestrian_counter</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves frames and metadata for a specific action and intent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            start_timestamp (str): Start timestamp for the frames to save.</span>
+<span class="sd">            end_timestamp (str): End timestamp for the frames to save.</span>
+<span class="sd">            action (str): Action label for the pedestrian.</span>
+<span class="sd">            intent (int): Intent label (0: no intent, 1: with intent).</span>
+<span class="sd">            pedestrian_counter (int): Counter for pedestrian identification.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving frames from </span><span class="si">{</span><span class="n">start_timestamp</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">end_timestamp</span><span class="si">}</span><span class="s2"> for action </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2"> number </span><span class="si">{</span><span class="n">pedestrian_counter</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_intention</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">intent</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">class_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">_no_intent&quot;</span>
+            <span class="k">elif</span> <span class="n">intent</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">class_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">_with_intent&quot;</span>
+            <span class="n">action_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_folder</span> <span class="o">/</span> <span class="n">class_name</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">pedestrian_counter</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">pedestrian_counter</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">action_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">frame_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_correct_frames_data</span><span class="p">()</span>
+        <span class="n">frames_to_save</span> <span class="o">=</span> <span class="n">frame_data</span><span class="p">[(</span><span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">start_timestamp</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">frame_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end_timestamp</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Explicitly cast the &#39;action&#39; column to string dtype</span>
+        <span class="n">frames_to_save</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frames_to_save</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span>  <span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">frames_to_save</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span> <span class="c1"># or any default value</span>
+
+        <span class="k">if</span> <span class="s1">&#39;intent&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frames_to_save</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">frames_to_save</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;intent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># or any default value</span>
+
+        <span class="c1"># Explicitly cast the &#39;intent&#39; column to integer dtype</span>
+        <span class="n">frames_to_save</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;intent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frames_to_save</span><span class="p">[</span><span class="s1">&#39;intent&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">frames_to_save</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;intent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">intent</span>
+
+        <span class="n">csv_output_path</span> <span class="o">=</span> <span class="n">action_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">pedestrian_counter</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+        <span class="n">frames_to_save</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_output_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">frames_to_save</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">color_frame_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;rgb_frame&#39;</span><span class="p">])</span>
+            <span class="n">depth_frame_path</span> <span class="o">=</span> <span class="n">check_os_windows</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;depth_frame&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">color_frame_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">depth_frame_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">color_frame_path</span><span class="p">,</span> <span class="n">action_folder</span> <span class="o">/</span> <span class="n">color_frame_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">depth_frame_path</span><span class="p">,</span> <span class="n">action_folder</span> <span class="o">/</span> <span class="n">depth_frame_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frame </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;rgb_frame&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../datasets.html#datasets.dataset_manager.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;/media/felipezero/T7 Shield/DATA/thesis/Videos/2023_05_05/&#39;</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="s1">&#39;video_02&#39;</span>
+    <span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;/media/felipezero/T7 Shield/DATA/thesis/intent_prediction_dataset/classes_02/&#39;</span>
+
+    <span class="n">dataset_manager</span> <span class="o">=</span> <span class="n">DatasetManager</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span> <span class="n">video</span><span class="o">=</span><span class="n">video</span><span class="p">,</span> <span class="n">output_folder</span><span class="o">=</span><span class="n">output_folder</span><span class="p">)</span>
+    <span class="n">dataset_manager</span><span class="o">.</span><span class="n">create_classes_for_intent_prediction</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

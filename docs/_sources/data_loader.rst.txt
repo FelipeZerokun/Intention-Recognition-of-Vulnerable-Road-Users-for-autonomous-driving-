@@ -1,0 +1,53 @@
+data\_loader package
+====================
+
+Submodules
+----------
+
+data\_loader.action\_recognition\_dataset module
+------------------------------------------------
+
+.. automodule:: data_loader.action_recognition_dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+data\_loader.intent\_prediction\_dataset module
+-----------------------------------------------
+
+.. automodule:: data_loader.intent_prediction_dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+data\_loader.multi\_modal\_dataset module
+-----------------------------------------
+
+.. automodule:: data_loader.multi_modal_dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+data\_loader.split\_dataset\_AR module
+--------------------------------------
+
+.. automodule:: data_loader.split_dataset_AR
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+data\_loader.split\_dataset\_IP module
+--------------------------------------
+
+.. automodule:: data_loader.split_dataset_IP
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: data_loader
+   :members:
+   :show-inheritance:
+   :undoc-members:

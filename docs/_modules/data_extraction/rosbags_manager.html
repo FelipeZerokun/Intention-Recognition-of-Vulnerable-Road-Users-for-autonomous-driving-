@@ -1,0 +1,571 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_extraction.rosbags_manager &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=34cd777e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">data_extraction.rosbags_manager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for data_extraction.rosbags_manager</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rosbag</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">project_utils.project_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">check_path</span><span class="p">,</span>
+    <span class="n">save_image_file</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">data_extraction</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_color_image</span><span class="p">,</span>
+    <span class="n">get_depth_image</span><span class="p">,</span>
+    <span class="n">get_pointcloud_map</span><span class="p">,</span>
+    <span class="n">get_odometry</span><span class="p">,</span>
+    <span class="n">get_velocity</span><span class="p">,</span>
+    <span class="n">get_NED_position</span><span class="p">,</span>
+    <span class="n">get_llh_position</span><span class="p">,</span>
+    <span class="n">get_ECEF_position</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> - </span><span class="si">%(levelname)s</span><span class="s1"> - </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RosbagManager">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.RosbagManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RosbagManager</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to manage and extract data from ROS bag files for the creation of datasets for Action Recognition</span>
+<span class="sd">    and Intent Prediction models.</span>
+<span class="sd">    This class provides methods to open, close, reindex, and extract data from ROS bag files.</span>
+<span class="sd">    It supports extracting stereo images, depth maps, point clouds, and odometry data,</span>
+<span class="sd">    and saving the extracted data to specified directories.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        path (Path): Path to the directory containing the ROS bag file.</span>
+<span class="sd">        name (str): Name of the ROS bag file.</span>
+<span class="sd">        file (Path): Full path to the ROS bag file.</span>
+<span class="sd">        bag (rosbag.Bag): The ROS bag file object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_stereo_info</span> <span class="o">=</span> <span class="s1">&#39;/camera/color/camera_info&#39;</span>
+    <span class="n">_stereo_image</span> <span class="o">=</span> <span class="s1">&#39;/camera/color/image_raw&#39;</span>
+    <span class="n">_depth_image</span> <span class="o">=</span> <span class="s1">&#39;/camera/depth/image_rect_raw&#39;</span>
+    <span class="n">_depth_pointcloud</span> <span class="o">=</span> <span class="s1">&#39;/camera/depth/color/points&#39;</span>
+
+    <span class="n">_depth_scale</span> <span class="o">=</span> <span class="mf">0.001</span>
+
+    <span class="n">_ned_pos_topic</span> <span class="o">=</span> <span class="s1">&#39;/anavs/solution/pos&#39;</span>
+    <span class="n">_global_pos_topic</span> <span class="o">=</span> <span class="s1">&#39;/anavs/solution/pos_llh&#39;</span>
+    <span class="n">_ecef_pos_topic</span> <span class="o">=</span> <span class="s1">&#39;/anavs/solution/pos_xyz&#39;</span>
+    <span class="n">_local_vel_topic</span> <span class="o">=</span> <span class="s1">&#39;/anavs/solution/vel&#39;</span>
+
+    <span class="n">_odom_topic</span> <span class="o">=</span> <span class="s1">&#39;/RosAria/pose&#39;</span>
+    <span class="n">_estimated_speed</span> <span class="o">=</span> <span class="s1">&#39;/anavs/solution/vel&#39;</span>
+
+    <span class="n">_gnss_topics</span> <span class="o">=</span> <span class="p">[</span><span class="n">_ned_pos_topic</span><span class="p">,</span>
+                   <span class="n">_global_pos_topic</span><span class="p">,</span>
+                   <span class="n">_ecef_pos_topic</span><span class="p">,</span>
+                   <span class="n">_local_vel_topic</span><span class="p">,</span>
+                   <span class="n">_odom_topic</span><span class="p">,]</span>
+
+    <span class="n">_stereo_topics</span> <span class="o">=</span> <span class="p">[</span><span class="n">_stereo_info</span><span class="p">,</span> <span class="n">_stereo_image</span><span class="p">,</span> <span class="n">_depth_image</span><span class="p">,</span> <span class="n">_depth_pointcloud</span><span class="p">]</span>
+
+    <span class="n">_topics</span> <span class="o">=</span> <span class="p">[</span><span class="n">_odom_topic</span><span class="p">,</span> <span class="o">*</span><span class="n">_stereo_topics</span><span class="p">,</span> <span class="o">*</span><span class="n">_gnss_topics</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the RosbagManager object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): Path to the directory containing the ROS bag file.</span>
+<span class="sd">            name (str): Name of the ROS bag file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bag</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_open_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Opens the ROS bag file for reading.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: If the ROS bag file cannot be opened.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bag</span> <span class="o">=</span> <span class="n">rosbag</span><span class="o">.</span><span class="n">Bag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">skip_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rosbag opened successfully&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Rosbag opened successfully.&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_close_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Closes the ROS bag file.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: If the ROS bag file cannot be closed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Rosbag closed successfully.&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RosbagManager.reindex_bag">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.RosbagManager.reindex_bag">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reindex_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reindexes the ROS bag file to fix any indexing issues.</span>
+
+<span class="sd">        Logs:</span>
+<span class="sd">            Information about the reindexing process.</span>
+<span class="sd">            Warnings if any errors occur during reindexing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Reindexing rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reindexing rosbag&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s1">&#39;rosbag&#39;</span><span class="p">,</span> <span class="s1">&#39;reindex&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> reindexed successfully.&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error while reindexing rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RosbagManager.check_bag">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.RosbagManager.check_bag">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the contents of the ROS bag file and prints metadata.</span>
+
+<span class="sd">        Prints:</span>
+<span class="sd">            Duration of the bag, message count, and topic information.</span>
+
+<span class="sd">        Logs:</span>
+<span class="sd">            Warnings if any errors occur while accessing the bag.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_open_bag</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bag duration: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">get_end_time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">get_start_time</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bag messages: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">get_message_count</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">get_type_and_topic_info</span><span class="p">()</span>
+            <span class="n">topics</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">topics</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Info: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of topics: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">topics</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------------------------------&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">topic</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">topics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Topic: </span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Message type: </span><span class="si">{</span><span class="n">metadata</span><span class="o">.</span><span class="n">msg_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Message count: </span><span class="si">{</span><span class="n">metadata</span><span class="o">.</span><span class="n">message_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frequency: </span><span class="si">{</span><span class="n">metadata</span><span class="o">.</span><span class="n">frequency</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------------------------------&quot;</span><span class="p">)</span>
+
+
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error while opening rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_close_bag</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RosbagManager.extract_all_data">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.RosbagManager.extract_all_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts all relevant data from the ROS bag file and saves it to the specified directory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output_dir (str): Directory to save the extracted data.</span>
+
+<span class="sd">        Saves:</span>
+<span class="sd">            RGB frames, depth frames, and navigation data as image files and a CSV file.</span>
+
+<span class="sd">        Logs:</span>
+<span class="sd">            Warnings if any errors occur during data extraction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frames_to_skip</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">show_info</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">depth_map_check</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">stereo_image_check</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">pointcloud_check</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">odom_check</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">t_image</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">t_depth</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pointcloud</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_open_bag</span><span class="p">()</span>
+            <span class="n">check_path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">navigation_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;Robot odometry&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;Robot NED position&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;Robot ECEF position&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;Robot Global position&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;Robot estimated velocity&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;rgb_frame&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;depth_frame&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">topic</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">read_messages</span><span class="p">(</span><span class="n">topics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_topics</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">show_info</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stereo_info</span><span class="p">:</span>
+                        <span class="n">frames_to_skip</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">frames_to_skip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Stereo camera info: </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                            <span class="n">image_height</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">height</span>
+                            <span class="n">image_width</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">width</span>
+                            <span class="n">intrinsic_camera_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">K</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># 3x3 matrix</span>
+                            <span class="n">distortion_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">D</span><span class="p">)</span>
+                            <span class="n">rotation_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># 3x3 matrix</span>
+                            <span class="n">projection_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># 3x4 matrix</span>
+
+                            <span class="c1"># Initialize the variables for the robot position</span>
+                            <span class="n">x_pos</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="n">z_pos</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">lat</span> <span class="o">=</span> <span class="n">long</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">ecef_x</span> <span class="o">=</span> <span class="n">ecef_y</span> <span class="o">=</span> <span class="n">ecef_z</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">vel_x</span> <span class="o">=</span> <span class="n">vel_y</span> <span class="o">=</span> <span class="n">vel_z</span> <span class="o">=</span> <span class="mi">0</span>
+
+                            <span class="n">show_info</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_odom_topic</span><span class="p">:</span>
+                        <span class="n">robot_pos</span><span class="p">,</span> <span class="n">robot_commands</span> <span class="o">=</span> <span class="n">get_odometry</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="n">odom_check</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ned_pos_topic</span><span class="p">:</span>
+                        <span class="c1"># Extract position</span>
+                        <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">z_pos</span> <span class="o">=</span> <span class="n">get_NED_position</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_pos_topic</span><span class="p">:</span>
+                        <span class="c1"># Extract position</span>
+                        <span class="n">lat</span><span class="p">,</span> <span class="n">long</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">get_llh_position</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecef_pos_topic</span><span class="p">:</span>
+                        <span class="c1"># Extract position</span>
+                        <span class="n">ecef_x</span><span class="p">,</span> <span class="n">ecef_y</span><span class="p">,</span> <span class="n">ecef_z</span> <span class="o">=</span> <span class="n">get_ECEF_position</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_vel_topic</span><span class="p">:</span>
+                        <span class="n">vel_x</span><span class="p">,</span> <span class="n">vel_y</span><span class="p">,</span> <span class="n">vel_z</span> <span class="o">=</span> <span class="n">get_velocity</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_image</span><span class="p">:</span>
+                        <span class="n">depth_image</span> <span class="o">=</span> <span class="n">get_depth_image</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">fix_frame</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">depth_map_check</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stereo_image</span><span class="p">:</span>
+                        <span class="c1"># Extract frame</span>
+                        <span class="n">frame</span> <span class="o">=</span> <span class="n">get_color_image</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">to_nsec</span><span class="p">()</span>
+                        <span class="n">stereo_image_check</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_pointcloud</span><span class="p">:</span>
+                        <span class="c1"># points = get_pointcloud_map(msg, image_height, image_width)</span>
+                        <span class="n">pointcloud_check</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">if</span> <span class="n">depth_map_check</span> <span class="ow">and</span> <span class="n">stereo_image_check</span> <span class="ow">and</span> <span class="n">odom_check</span><span class="p">:</span>
+                        <span class="c1"># visualize_data(frame, depth_image)</span>
+
+                        <span class="n">color_file_name</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s1">_rgb_frame.png&#39;</span>
+                        <span class="n">depth_file_name</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s1">_depth_frame.png&#39;</span>
+
+                        <span class="n">save_image_file</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">color_file_name</span><span class="p">)</span>
+                        <span class="n">save_image_file</span><span class="p">(</span><span class="n">depth_image</span><span class="p">,</span> <span class="n">depth_file_name</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;Robot odometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">robot_pos</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;Robot NED position&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">z_pos</span><span class="p">])</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;Robot ECEF position&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ecef_x</span><span class="p">,</span> <span class="n">ecef_y</span><span class="p">,</span> <span class="n">ecef_z</span><span class="p">])</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;Robot Global position&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lat</span><span class="p">,</span> <span class="n">long</span><span class="p">,</span> <span class="n">height</span><span class="p">])</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;Robot estimated velocity&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">vel_x</span><span class="p">,</span> <span class="n">vel_y</span><span class="p">,</span> <span class="n">vel_z</span><span class="p">])</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;rgb_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">color_file_name</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;depth_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">depth_file_name</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+                        <span class="n">depth_map_check</span> <span class="o">=</span> <span class="n">stereo_image_check</span> <span class="o">=</span> <span class="n">odom_check</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># Write the data into a CSV file</span>
+            <span class="n">nav_data_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">navigation_data</span><span class="p">)</span>
+            <span class="n">csv_file_name</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;navigation_data.csv&#39;</span>
+
+            <span class="n">nav_data_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_file_name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Data extracted successfully.&quot;</span><span class="p">)</span>
+
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error while extracting data from rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;closing rosbag&quot;</span><span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_close_bag</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RosbagManager.extract_stereo_data">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.RosbagManager.extract_stereo_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_stereo_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts stereo data (RGB and depth frames) from the ROS bag file and saves it to the specified directory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output_dir (str): Directory to save the extracted RGB and depth frames, along with the metadata.</span>
+
+<span class="sd">        Saves:</span>
+<span class="sd">            RGB frames and depth frames as image files, and metadata as a CSV file.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: If an error occurs during the extraction process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frames_to_skip</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">show_info</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">depth_map_check</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">stereo_image_check</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">t_image</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">t_depth</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pointcloud</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_open_bag</span><span class="p">()</span>
+            <span class="n">check_path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">navigation_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;rgb_frame&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;depth_frame&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">topic</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">read_messages</span><span class="p">(</span><span class="n">topics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_topics</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">show_info</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stereo_info</span><span class="p">:</span>
+                        <span class="n">frames_to_skip</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">frames_to_skip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Stereo camera info: </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                            <span class="n">image_height</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">height</span>
+                            <span class="n">image_width</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">width</span>
+                            <span class="n">intrinsic_camera_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">K</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># 3x3 matrix</span>
+                            <span class="n">distortion_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">D</span><span class="p">)</span>
+                            <span class="n">rotation_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># 3x3 matrix</span>
+                            <span class="n">projection_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># 3x4 matrix</span>
+
+                            <span class="c1"># Initialize the variables for the robot position</span>
+                            <span class="n">x_pos</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="n">z_pos</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">lat</span> <span class="o">=</span> <span class="n">long</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">ecef_x</span> <span class="o">=</span> <span class="n">ecef_y</span> <span class="o">=</span> <span class="n">ecef_z</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">vel_x</span> <span class="o">=</span> <span class="n">vel_y</span> <span class="o">=</span> <span class="n">vel_z</span> <span class="o">=</span> <span class="mi">0</span>
+
+                            <span class="n">show_info</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_image</span><span class="p">:</span>
+                        <span class="n">depth_image</span> <span class="o">=</span> <span class="n">get_depth_image</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="n">depth_map_check</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">elif</span> <span class="n">topic</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stereo_image</span><span class="p">:</span>
+                        <span class="c1"># Extract frame</span>
+                        <span class="n">frame</span> <span class="o">=</span> <span class="n">get_color_image</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">to_nsec</span><span class="p">()</span>
+                        <span class="n">stereo_image_check</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">if</span> <span class="n">depth_map_check</span> <span class="ow">and</span> <span class="n">stereo_image_check</span><span class="p">:</span>
+                        <span class="c1"># visualize_data(frame, depth_image)</span>
+
+                        <span class="n">color_file_name</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s1">_rgb_frame.png&#39;</span>
+                        <span class="n">depth_file_name</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s1">_depth_frame.png&#39;</span>
+
+                        <span class="n">save_image_file</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">color_file_name</span><span class="p">)</span>
+                        <span class="n">save_image_file</span><span class="p">(</span><span class="n">depth_image</span><span class="p">,</span> <span class="n">depth_file_name</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;rgb_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">color_file_name</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;depth_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">depth_file_name</span><span class="p">)</span>
+                        <span class="n">navigation_data</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+                        <span class="n">depth_map_check</span> <span class="o">=</span> <span class="n">stereo_image_check</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># Write the data into a CSV file</span>
+            <span class="n">nav_data_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">navigation_data</span><span class="p">)</span>
+            <span class="n">csv_file_name</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;navigation_data.csv&#39;</span>
+
+            <span class="n">nav_data_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_file_name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Data extracted successfully.&quot;</span><span class="p">)</span>
+
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error while extracting stereo images from rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;closing rosbag&quot;</span><span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_close_bag</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RosbagManager.extract_video">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.RosbagManager.extract_video">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_video</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts video frames from the ROS bag file and saves them as a video file.</span>
+
+<span class="sd">        Saves:</span>
+<span class="sd">            A video file containing the extracted frames.</span>
+
+<span class="sd">        Logs:</span>
+<span class="sd">            Warnings if any errors occur during video extraction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_open_bag</span><span class="p">()</span>
+
+            <span class="n">video_writer</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">frame_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">topic</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bag</span><span class="o">.</span><span class="n">read_messages</span><span class="p">(</span><span class="n">topics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;/camera/color/image_raw&#39;</span><span class="p">]):</span>
+                <span class="c1"># Extract frame</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">video_writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Initialize the video writer with the first frame&#39;s properties</span>
+                    <span class="n">fourcc</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter_fourcc</span><span class="p">(</span><span class="o">*</span><span class="s1">&#39;X264&#39;</span><span class="p">)</span>  <span class="c1"># Use X264 codec for MP4 format</span>
+                    <span class="n">fps</span> <span class="o">=</span> <span class="mi">30</span>
+                    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.bag&#39;</span><span class="p">,</span> <span class="s1">&#39;.mp4&#39;</span><span class="p">))</span>
+                    <span class="n">video_writer</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">),</span> <span class="n">fourcc</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
+
+                <span class="c1"># Write frame to video</span>
+                <span class="n">video_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+                <span class="n">frame_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c1"># print(f&#39;Frame {frame_count} extracted.&#39;)</span>
+
+            <span class="k">if</span> <span class="n">video_writer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">video_writer</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Video extracted successfully to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error while extracting images from rosbag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_close_bag</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../data_extraction.html#data_extraction.rosbags_manager.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">rosbag_path</span> <span class="o">=</span> <span class="s1">&#39;/internal/rosbags/&#39;</span>
+    <span class="n">rosbag_name</span> <span class="o">=</span> <span class="s1">&#39;2023_05_05/video_01/2023_05_05_10_14_Gera_C-R_Alt.orig.bag&#39;</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="s1">&#39;/internal/rosbags/extracted_data/video_01/&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extracting data from&quot;</span><span class="p">,</span> <span class="n">rosbag_name</span><span class="p">)</span>
+    <span class="n">bag</span> <span class="o">=</span> <span class="n">RosbagManager</span><span class="p">(</span><span class="n">rosbag_path</span><span class="p">,</span> <span class="n">rosbag_name</span><span class="p">)</span>
+    <span class="c1"># bag.extract_video()</span>
+
+    <span class="n">bag</span><span class="o">.</span><span class="n">check_bag</span><span class="p">()</span>
+    <span class="n">bag</span><span class="o">.</span><span class="n">extract_all_data</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

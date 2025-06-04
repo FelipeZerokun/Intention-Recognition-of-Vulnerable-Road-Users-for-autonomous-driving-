@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>datasets.data_augmentation &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=34cd777e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">datasets.data_augmentation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for datasets.data_augmentation</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">project_utils.project_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_path</span>
+
+
+<div class="viewcode-block" id="ClassAugmentation">
+<a class="viewcode-back" href="../../datasets.html#datasets.data_augmentation.ClassAugmentation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClassAugmentation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to perform data augmentation on a dataset of pedestrian images and their corresponding metadata.</span>
+
+<span class="sd">    It supports augmenting each pedestrian&#39;s data by applying specified transformations</span>
+<span class="sd">    (e.g., flip, brightness change, rotation) to the image sequences and generating new folders with updated images</span>
+<span class="sd">    and modified copies of the original CSV metadata.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        dataset_dir (str): Path to the dataset directory containing subfolders for each action class.</span>
+<span class="sd">        transformations (List[str]): A list of transformation types to apply (&#39;flip&#39;, &#39;brightness&#39;, &#39;rotate&#39;).</span>
+<span class="sd">        classes (List[List[str]]): A list of all classes with [class_name, number of pedestrian folders, class_dir].</span>
+<span class="sd">        total_classes (int): Total number of pedestrian folders across all classes.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        check_classes(): Checks the dataset directory for classes and counts the total number of pedestrian data entries.</span>
+<span class="sd">        augment_data(data: List[str]): Iterates through the images in the folder and applies the specified transformations.</span>
+<span class="sd">        augment_frame(frame_dir: str, transformations: List[str], output_dir: str, pedestrian_count: int):</span>
+<span class="sd">            Applies transformations to a single frame.</span>
+<span class="sd">        copy_csv_file(dataframe: pd.DataFrame, pedestrian_count: int, output_dir: str):</span>
+<span class="sd">            Copies and saves the CSV file for each transformation.</span>
+
+<span class="sd">      &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transformations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the ClassAugmentation object and performs initial checks.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataset_dir (str): Path to the dataset root directory.</span>
+<span class="sd">            transformations (List[str]): List of transformations to apply for augmentation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_dir</span> <span class="o">=</span> <span class="n">dataset_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span> <span class="o">=</span> <span class="n">transformations</span>
+
+        <span class="n">check_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_classes</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
+
+        <span class="c1"># self.augment_data(self.classes[3])</span>
+
+<div class="viewcode-block" id="ClassAugmentation.check_classes">
+<a class="viewcode-back" href="../../datasets.html#datasets.data_augmentation.ClassAugmentation.check_classes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the dataset directory for classes and counts the total number of pedestrian data entries.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            action_classes (List[List[str]): A list of all classes with [class_name, number of pedestrian folders, class_dir.</span>
+<span class="sd">            total_classes (int): Total number of pedestrian folders across all classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">action_classes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_dir</span><span class="p">)</span>
+        <span class="n">total_classes</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">action_class</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+            <span class="n">class_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_dir</span> <span class="o">+</span> <span class="n">action_class</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+            <span class="n">total_data</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">class_dir</span><span class="p">))</span>
+            <span class="n">total_classes</span> <span class="o">+=</span> <span class="n">total_data</span>
+            <span class="n">class_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">action_class</span><span class="p">,</span> <span class="n">total_data</span><span class="p">,</span> <span class="n">class_dir</span><span class="p">]</span>
+            <span class="n">action_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">class_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">action_classes</span><span class="p">,</span> <span class="n">total_classes</span></div>
+
+
+<div class="viewcode-block" id="ClassAugmentation.augment_data">
+<a class="viewcode-back" href="../../datasets.html#datasets.data_augmentation.ClassAugmentation.augment_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">augment_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs augmentation for a specific class.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (List[str]): Class details [class_name, number of pedestrian folders, class directory]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">class_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">total_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">class_dir</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">pedestrian_counter</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">pedestrian</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">class_dir</span><span class="p">):</span>
+            <span class="n">pedestrian_num</span> <span class="o">=</span> <span class="n">pedestrian_counter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_classes</span>
+            <span class="n">class_to_augment</span> <span class="o">=</span> <span class="n">class_dir</span> <span class="o">+</span> <span class="n">pedestrian</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">class_to_augment</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">class_to_augment</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">):</span>
+                    <span class="n">image_path</span> <span class="o">=</span> <span class="n">class_to_augment</span> <span class="o">+</span> <span class="n">image</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">augment_frame</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">,</span> <span class="n">class_dir</span><span class="p">,</span> <span class="n">pedestrian_num</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+                    <span class="n">class_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">class_to_augment</span> <span class="o">+</span> <span class="n">image</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy_csv_file</span><span class="p">(</span><span class="n">class_data</span><span class="p">,</span> <span class="n">pedestrian_num</span><span class="p">,</span> <span class="n">class_dir</span><span class="p">)</span>
+            <span class="n">pedestrian_counter</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ClassAugmentation.augment_frame">
+<a class="viewcode-back" href="../../datasets.html#datasets.data_augmentation.ClassAugmentation.augment_frame">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">augment_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transformations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pedestrian_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applies the given transformations to a single frame.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame_dir (str): Full path to the image frame (.png).</span>
+<span class="sd">            transformations (List[str]): List of transformations to apply (e.g., &#39;flip&#39;, &#39;brightness&#39;, &#39;rotate&#39;).</span>
+<span class="sd">            output_dir (str): Output directory where the augmented folders will be saved.</span>
+<span class="sd">            pedestrian_count (int): Unique pedestrian number to name the new folders and files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frame_name</span> <span class="o">=</span> <span class="n">frame_dir</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">frame_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;flip&#39;</span> <span class="ow">in</span> <span class="n">transformations</span><span class="p">:</span>
+            <span class="n">output_flip_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+            <span class="n">check_path</span><span class="p">(</span><span class="n">output_flip_dir</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">flip</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">flip_name</span> <span class="o">=</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">frame_name</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">output_flip_dir</span> <span class="o">+</span> <span class="n">flip_name</span><span class="p">,</span> <span class="n">flip</span><span class="p">)</span>
+            <span class="n">pedestrian_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="s1">&#39;brightness&#39;</span> <span class="ow">in</span> <span class="n">transformations</span><span class="p">:</span>
+            <span class="n">output_brightness_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+            <span class="n">check_path</span><span class="p">(</span><span class="n">output_brightness_dir</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="mi">15</span>
+            <span class="n">hsv</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2HSV</span><span class="p">)</span>
+            <span class="n">hsv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hsv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">hsv</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_HSV2BGR</span><span class="p">)</span>
+            <span class="n">color_name</span> <span class="o">=</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">frame_name</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">output_brightness_dir</span> <span class="o">+</span> <span class="n">color_name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+
+            <span class="n">pedestrian_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="s1">&#39;rotate&#39;</span> <span class="ow">in</span> <span class="n">transformations</span><span class="p">:</span>
+            <span class="n">output_rotate_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+            <span class="n">check_path</span><span class="p">(</span><span class="n">output_rotate_dir</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getRotationMatrix2D</span><span class="p">((</span><span class="n">cols</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rows</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">rotate</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpAffine</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">))</span>
+            <span class="n">rotate_name</span> <span class="o">=</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">frame_name</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">output_rotate_dir</span> <span class="o">+</span> <span class="n">rotate_name</span><span class="p">,</span> <span class="n">rotate</span><span class="p">)</span>
+
+            <span class="n">pedestrian_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="ClassAugmentation.copy_csv_file">
+<a class="viewcode-back" href="../../datasets.html#datasets.data_augmentation.ClassAugmentation.copy_csv_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy_csv_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pedestrian_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copies and saves the CSV file corresponding to the transformed images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        dataframe (pd.DataFrame): Metadata CSV as a pandas DataFrame.</span>
+<span class="sd">        pedestrian_count (int): Pedestrian identifier for the augmented data.</span>
+<span class="sd">        output_dir (str): Base directory where new folders will be created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;flip&#39;</span><span class="p">:</span>
+                <span class="n">output_flip_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+                <span class="n">dataframe</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_flip_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;pedestrian_</span><span class="si">{</span><span class="n">pedestrian_count</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">pedestrian_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;rotate&#39;</span><span class="p">:</span>
+                <span class="n">output_rotate_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+                <span class="n">dataframe</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_rotate_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;pedestrian_</span><span class="si">{</span><span class="n">pedestrian_count</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="n">pedestrian_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;brightness&#39;</span><span class="p">:</span>
+                <span class="n">output_brightness_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;pedestrian_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pedestrian_count</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+                <span class="n">dataframe</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_brightness_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;pedestrian_</span><span class="si">{</span><span class="n">pedestrian_count</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="n">pedestrian_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../datasets.html#datasets.data_augmentation.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">dataset_dir</span> <span class="o">=</span> <span class="s1">&#39;/media/felipezero/T7 Shield/DATA/thesis/action_recognition_dataset/&#39;</span>
+    <span class="n">dataset_dir</span> <span class="o">=</span> <span class="s1">&#39;E:/DATA/thesis/intent_prediction_dataset/classes_01_test/&#39;</span>
+
+    <span class="n">transformations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;flip&#39;</span><span class="p">,</span> <span class="s1">&#39;brightness&#39;</span><span class="p">]</span>  <span class="c1"># &#39;flip&#39;, &#39;brightness&#39; and/or &#39;rotate&#39;</span>
+
+    <span class="n">class_augmentation</span> <span class="o">=</span> <span class="n">ClassAugmentation</span><span class="p">(</span><span class="n">dataset_dir</span><span class="p">,</span> <span class="n">transformations</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+datasets package
+================
+
+Submodules
+----------
+
+datasets.class\_analysis module
+-------------------------------
+
+.. automodule:: datasets.class_analysis
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+datasets.data\_augmentation module
+----------------------------------
+
+.. automodule:: datasets.data_augmentation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+datasets.dataset\_manager module
+--------------------------------
+
+.. automodule:: datasets.dataset_manager
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+datasets.frames\_extraction module
+----------------------------------
+
+.. automodule:: datasets.frames_extraction
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+datasets.navigation\_data\_modifier module
+------------------------------------------
+
+.. automodule:: datasets.navigation_data_modifier
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: datasets
+   :members:
+   :show-inheritance:
+   :undoc-members:

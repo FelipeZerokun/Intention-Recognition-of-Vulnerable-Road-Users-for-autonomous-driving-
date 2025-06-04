@@ -1,0 +1,347 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_loader.intent_prediction_dataset &mdash; Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=34cd777e"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pedestrian Intent Prediction of Pedestrian for autonomous mobile robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">data_loader.intent_prediction_dataset</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for data_loader.intent_prediction_dataset</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">project_utils.project_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_position_string</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module defines the `IntentPredictionDataset` class, a PyTorch Dataset for loading and processing</span>
+<span class="sd">sequential data for pedestrian intent prediction tasks. It also includes a utility function for</span>
+<span class="sd">computing normalization statistics.</span>
+
+<span class="sd">Classes:</span>
+<span class="sd">    IntentPredictionDataset: A custom PyTorch Dataset for loading sequences of features and labels.</span>
+
+<span class="sd">Functions:</span>
+<span class="sd">    compute_normalization_stats: Computes mean and standard deviation for dataset normalization.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="IntentPredictionDataset">
+<a class="viewcode-back" href="../../data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IntentPredictionDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A PyTorch Dataset for loading and processing sequential data for pedestrian intent prediction.</span>
+
+<span class="sd">    This dataset processes CSV files containing features such as robot positions, velocities, bounding</span>
+<span class="sd">    boxes, distances, and actions. It supports sequence extraction, optional normalization, and</span>
+<span class="sd">    action recognition.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        samples (list): List of data sequences extracted from the dataset.</span>
+<span class="sd">        labels (list): List of labels corresponding to the sequences.</span>
+<span class="sd">        sequence_length (int): Length of the sequences to extract.</span>
+<span class="sd">        action_recognition (bool): Whether to use action recognition mode.</span>
+<span class="sd">        action (float or None): Action value to use in action recognition mode.</span>
+<span class="sd">        normalize (bool): Whether to normalize the features.</span>
+<span class="sd">        mean (numpy.ndarray or None): Mean values for normalization.</span>
+<span class="sd">        std (numpy.ndarray or None): Standard deviation values for normalization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_dir</span><span class="p">,</span> <span class="n">using_action_recognition</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sequence_length</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the IntentPredictionDataset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataset_dir (str): Path to the dataset directory.</span>
+<span class="sd">            using_action_recognition (bool, optional): Whether to use action recognition mode. Defaults to False.</span>
+<span class="sd">            sequence_length (int, optional): Length of the sequences to extract. Defaults to 16.</span>
+<span class="sd">            normalize (bool, optional): Whether to normalize the features. Defaults to True.</span>
+<span class="sd">            mean (numpy.ndarray, optional): Mean values for normalization. Defaults to None.</span>
+<span class="sd">            std (numpy.ndarray, optional): Standard deviation values for normalization. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence_length</span> <span class="o">=</span> <span class="n">sequence_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_recognition</span> <span class="o">=</span> <span class="n">using_action_recognition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span> <span class="o">=</span> <span class="n">normalize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+
+        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dataset_dir</span><span class="p">):</span>
+            <span class="n">folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dataset_dir</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">label</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">folder</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_0&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+                <span class="n">action_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">action_folder</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
+                        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">action_folder</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+                        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">-</span> <span class="n">sequence_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                            <span class="n">seq</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">sequence_length</span><span class="p">]</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the total number of elements in the &#39;samples&#39; collection.</span>
+
+<span class="sd">        This method is used to retrieve the count of items stored in the</span>
+<span class="sd">        &#39;samples&#39; attribute of the object. It serves as an implementation</span>
+<span class="sd">        of the Python built-in `__len__` method.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The number of elements in the &#39;samples&#39; collection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves features and labels for a given index from the dataset.</span>
+
+<span class="sd">        This method extracts various feature representations and labels for a specific</span>
+<span class="sd">        index in the dataset. It computes features such as robot positions, velocities,</span>
+<span class="sd">        bounding boxes, positions, distances, and actions based on the attributes of the</span>
+<span class="sd">        class. Additionally, optional normalization is performed on the features if</span>
+<span class="sd">        normalization is enabled and corresponding statistics (mean and standard deviation)</span>
+<span class="sd">        are available. The method returns the processed features and label as PyTorch tensors.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx (int): The index of the sample to retrieve from the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[torch.Tensor, torch.Tensor]: A tuple where the first element is a</span>
+<span class="sd">            tensor containing the features and the second element is a tensor containing</span>
+<span class="sd">            the label.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            AssertionError: If the `action` attribute is None but is required for action</span>
+<span class="sd">            recognition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">seq_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Parse features</span>
+        <span class="n">robot_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;robot_position&#39;</span><span class="p">]])</span>
+        <span class="n">robot_velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">vel</span><span class="p">)</span> <span class="k">for</span> <span class="n">vel</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;robot_velocity&#39;</span><span class="p">]])</span>
+        <span class="n">robot_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">robot_velocities</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">robot_velocities</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">box</span><span class="p">)</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;bounding_box&#39;</span><span class="p">]])</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">ffill</span><span class="p">()</span><span class="o">.</span><span class="n">bfill</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ffill</span><span class="p">()</span><span class="o">.</span><span class="n">bfill</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Actions value error: None&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_recognition</span><span class="p">:</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">seq_df</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="p">(</span><span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;walking&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+
+
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+            <span class="n">robot_positions</span><span class="p">,</span>
+            <span class="n">robot_speed</span><span class="p">,</span>
+            <span class="n">bounding_boxes</span><span class="p">,</span>
+            <span class="n">distances</span><span class="p">,</span>
+            <span class="n">positions</span><span class="p">,</span>
+            <span class="n">actions</span>
+        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Normalize if requested and stats are available</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="p">(</span><span class="n">features</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">+</span> <span class="mf">1e-8</span><span class="p">)</span>
+
+
+        <span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">features</span><span class="p">,</span> <span class="n">label</span>
+
+<div class="viewcode-block" id="IntentPredictionDataset.from_existing">
+<a class="viewcode-back" href="../../data_loader.html#data_loader.intent_prediction_dataset.IntentPredictionDataset.from_existing">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_existing</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of the class using existing data attributes.</span>
+
+<span class="sd">        This method is used to initialize a class object with pre-existing data</span>
+<span class="sd">        parameters such as samples, labels, and optional normalization parameters.</span>
+<span class="sd">        The function bypasses the `__init__` method and manually assigns attributes</span>
+<span class="sd">        to the class instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            samples: list</span>
+<span class="sd">                A list of input data samples that define the dataset.</span>
+<span class="sd">            labels: list</span>
+<span class="sd">                A list of corresponding labels for the given samples.</span>
+<span class="sd">            normalize: bool, optional</span>
+<span class="sd">                A flag indicating whether the data should be normalized. Defaults to True.</span>
+<span class="sd">            mean: float, optional</span>
+<span class="sd">                The mean value for normalization. Used if normalization is enabled.</span>
+<span class="sd">            std: float, optional</span>
+<span class="sd">                The standard deviation value for normalization. Used if normalization is enabled.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            cls</span>
+<span class="sd">                An instance of the class initialized with the provided data attributes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">sequence_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">normalize</span> <span class="o">=</span> <span class="n">normalize</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">action_recognition</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">dataset</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="compute_normalization_stats">
+<a class="viewcode-back" href="../../data_loader.html#data_loader.intent_prediction_dataset.compute_normalization_stats">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_normalization_stats</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes normalization statistics (mean and standard deviation) for the given dataset.</span>
+
+<span class="sd">    The function extracts multiple features from the dataset&#39;s sequences including robot</span>
+<span class="sd">    positions, velocities, speed, bounding boxes, positional data, distance, and actions.</span>
+<span class="sd">    These features are concatenated to form a feature matrix, from which the mean and</span>
+<span class="sd">    standard deviation are computed along each feature dimension to facilitate normalization.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dataset: A dataset object containing sequences of data samples. Each sample is</span>
+<span class="sd">            expected to have fields such as &#39;robot_position&#39;, &#39;robot_velocity&#39;,</span>
+<span class="sd">            &#39;bounding_box&#39;, &#39;position&#39;, &#39;distance&#39;, and &#39;action&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple[np.ndarray, np.ndarray]: A tuple containing two numpy arrays:</span>
+<span class="sd">            - mean: The mean of each feature across all sequences in the dataset.</span>
+<span class="sd">            - std: The standard deviation of each feature across all sequences in the dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_features</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">seq_df</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
+        <span class="n">robot_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;robot_position&#39;</span><span class="p">]])</span>
+        <span class="n">robot_velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">vel</span><span class="p">)</span> <span class="k">for</span> <span class="n">vel</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;robot_velocity&#39;</span><span class="p">]])</span>
+        <span class="n">robot_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">robot_velocities</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">robot_velocities</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">box</span><span class="p">)</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;bounding_box&#39;</span><span class="p">]])</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">parse_position_string</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">ffill</span><span class="p">()</span><span class="o">.</span><span class="n">bfill</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ffill</span><span class="p">()</span><span class="o">.</span><span class="n">bfill</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">(</span><span class="n">seq_df</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;walking&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+            <span class="n">robot_positions</span><span class="p">,</span>
+            <span class="n">robot_speed</span><span class="p">,</span>
+            <span class="n">bounding_boxes</span><span class="p">,</span>
+            <span class="n">distances</span><span class="p">,</span>
+            <span class="n">positions</span><span class="p">,</span>
+            <span class="n">actions</span>
+        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">all_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+
+    <span class="n">all_features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">all_features</span><span class="p">)</span>  <span class="c1"># Shape: (N*seq_len, num_features)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">all_features</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">all_features</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Felipe Rojas.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
