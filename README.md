@@ -64,4 +64,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For questions or collaborations, please contact **Felipe Zerokun** via [GitHub](https://github.com/FelipeZerokun).
+For questions, please contact **Felipe Rojas** via [GitHub](https://github.com/FelipeZerokun).
