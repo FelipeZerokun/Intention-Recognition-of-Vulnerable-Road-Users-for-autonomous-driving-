@@ -51,10 +51,10 @@ class ClassAugmentation:
     def check_classes(self) -> (List[List[str]], int):
         """
         Checks the dataset directory for classes and counts the total number of pedestrian data entries.
+
         Returns:
             action_classes (List[List[str]): A list of all classes with [class_name, number of pedestrian folders, class_dir.
             total_classes (int): Total number of pedestrian folders across all classes.
-        :no-index:
         """
         action_classes = []
         classes = os.listdir(self.dataset_dir)

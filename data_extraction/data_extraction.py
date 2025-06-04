@@ -1,15 +1,19 @@
 import cv2
 import numpy as np
 
-# import open3d as o3d
-
+import open3d as o3d
 import sensor_msgs.point_cloud2 as pc2
-
-# from scipy.spatial.transform import Rotation as R
-
+from scipy.spatial.transform import Rotation as R
 
 def get_camera_info(camera_info_msg):
-    """Get camera intrinsic parameters from camera info message
+    """
+    Extract camera intrinsic parameters from a camera info message.
+
+    Args:
+        camera_info_msg (sensor_msgs.msg.CameraInfo): The ROS camera info message containing the camera parameters.
+
+    Returns:
+        tuple: A tuple containing the focal length (fx, fy), and the principal point (cx, cy).
     """
     fx = camera_info_msg.K[0]
     fy = camera_info_msg.K[4]
@@ -18,9 +22,17 @@ def get_camera_info(camera_info_msg):
 
     return fx, fy, cx, cy
 
-
 def get_odometry(odom_msg):
-    """Get odometry from odometry message
+    """
+    Extracts the robot's position and commands from an odometry message.
+
+    Args:
+        odom_msg (nav_msgs.odom_msg): A ROS odometry message containing pose and twist information.
+
+    Returns:
+        tuple: A tuple containing:
+            - robot_position (np.ndarray): An array with the robot's x and y positions and yaw angle ([x_pos, y_pos, yaw]).
+            - robot_commands (np.ndarray): An array with the robot's linear velocity and angular velocity ([x_vel, z_rot]).
     """
     x_pos = odom_msg.pose.pose.position.x
     y_pos = odom_msg.pose.pose.position.y
@@ -44,9 +56,18 @@ def get_odometry(odom_msg):
 
     return robot_position, robot_commands
 
-
 def get_llh_position(gps_msg):
-    """Get latitude, longitude and height from GPS message
+    """
+    Extracts latitude, longitude, and height from a GPS message.
+
+    Args:
+        gps_msg (geometry_msgs/PointStamped): A ROS GPS message containing position information.
+
+    Returns:
+        tuple: A tuple containing:
+            - latitude (float): The latitude value from the GPS message.
+            - longitude (float): The longitude value from the GPS message.
+            - height (float): The height value from the GPS message.
     """
     latitude = gps_msg.point.x
     longitude = gps_msg.point.y
@@ -54,19 +75,37 @@ def get_llh_position(gps_msg):
 
     return latitude, longitude, height
 
-
 def get_NED_position(gps_msg):
-    """Get North, East and Down position from GPS message
+    """
+    Extracts the North, East, and Down (NED) position from a GPS message.
+
+    Args:
+        gps_msg (geometry_msgs/PointStamped): A ROS GPS message containing position information.
+
+    Returns:
+        tuple: A tuple containing:
+            - x_pos (float): The North position (x-coordinate) from the GPS message.
+            - y_pos (float): The East position (y-coordinate) from the GPS message.
+            - z_pos (float): The Down position (z-coordinate) from the GPS message.
     """
     x_pos = gps_msg.point.x
     y_pos = gps_msg.point.y
     z_pos = gps_msg.point.z
 
     return x_pos, y_pos, z_pos
-
 
 def get_ECEF_position(gps_msg):
-    """Get Earth-Centered, Earth-Fixed position from GPS message
+    """
+    Extracts the Earth-Centered, Earth-Fixed (ECEF) position from a GPS message.
+
+    Args:
+        gps_msg (geometry_msgs/PointStamped): A ROS GPS message containing position information.
+
+    Returns:
+        tuple: A tuple containing:
+            - x_pos (float): The x-coordinate in the ECEF coordinate system.
+            - y_pos (float): The y-coordinate in the ECEF coordinate system.
+            - z_pos (float): The z-coordinate in the ECEF coordinate system.
     """
     x_pos = gps_msg.point.x
     y_pos = gps_msg.point.y
@@ -74,9 +113,18 @@ def get_ECEF_position(gps_msg):
 
     return x_pos, y_pos, z_pos
 
-
 def get_velocity(vel_msg):
-    """Get linear and angular velocity from velocity message
+    """
+    Extracts the linear and angular velocity from a velocity message.
+
+    Args:
+        vel_msg (geometry_msgs/Vector3Stamped): A ROS velocity message containing vector information.
+
+    Returns:
+        tuple: A tuple containing:
+            - x_vel (float): The linear velocity in the x-direction.
+            - y_vel (float): The linear velocity in the y-direction.
+            - z_vel (float): The angular velocity in the z-direction.
     """
     x_vel = vel_msg.vector.x
     y_vel = vel_msg.vector.y
@@ -85,7 +133,14 @@ def get_velocity(vel_msg):
     return x_vel, y_vel, z_vel
 
 def get_color_image(img_msg):
-    """Convert ROS image message to OpenCV image
+    """
+    Converts a ROS image message to an OpenCV image.
+
+    Args:
+        img_msg (sensor_msgs/Image): A ROS image message containing image data.
+
+    Returns:
+        np.ndarray: An OpenCV image in RGB format.
     """
     frame = np.frombuffer(img_msg.data, dtype=np.uint8)
 
@@ -95,8 +150,15 @@ def get_color_image(img_msg):
 
 
 def get_depth_image(depth_msg, fix_frame=True):
-    """Convert ROS depth image message to OpenCV image with a colormap
+    """
+    Converts a ROS depth image message to an OpenCV image with a colormap.
 
+    Args:
+        depth_msg (sensor_msgs/Image): A ROS depth image message containing depth data.
+        fix_frame (bool, optional): Whether to apply a transformation to the depth frame. Defaults to True.
+
+    Returns:
+        np.ndarray: An OpenCV image representing the depth data.
     """
     frame = np.frombuffer(depth_msg.data, dtype=np.uint16)
     frame = frame.reshape(depth_msg.height, depth_msg.width, 1)
@@ -107,15 +169,31 @@ def get_depth_image(depth_msg, fix_frame=True):
     return frame
 
 def convert_depth2image(depth_array):
-    """Convert depth array to OpenCV image
     """
+    Crops and resizes a depth array to match the original dimensions.
+
+    Args:
+        depth_array (np.ndarray): A 2D array representing the depth data.
+
+    Returns:
+        np.ndarray: The cropped and resized depth array.
+    """
+
     cropped_image = depth_array[120:-120, 120:-120]
     cropped_image = cv2.resize(cropped_image, (depth_array.shape[1], depth_array.shape[0]))
 
     return cropped_image
 
 def visualize_data(color_image, depth_image):
-    """Visualze an overlap of the color image with the depth map
+    """
+    Visualizes the color and depth images by combining them with a colormap.
+
+    Args:
+        color_image (np.ndarray): The color image in RGB format.
+        depth_image (np.ndarray): The depth image in grayscale format.
+
+    Returns:
+        None
     """
     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_HOT)
     added_images = cv2.addWeighted(color_image, 0.7, depth_colormap, 0.3, 0)
@@ -124,9 +202,18 @@ def visualize_data(color_image, depth_image):
     cv2.imshow("Original images", merged_images)
     cv2.waitKey(5000)
 
-
 def get_pointcloud_map(pointcloud_msg, image_height, image_width):
-    """Convert ROS pointcloud message to OpenCV image
+    """
+    Processes a ROS point cloud message to extract 3D points and RGB data, visualize the point cloud,
+    and convert it to a 2D OpenCV image.
+
+    Args:
+        pointcloud_msg (sensor_msgs/PointCloud2): A ROS point cloud message containing 3D points and RGB data.
+        image_height (int): Height of the output image.
+        image_width (int): Width of the output image.
+
+    Returns:
+        np.ndarray: A numpy array containing the 3D points (XYZ) and RGB data.
     """
 
     height = pointcloud_msg.height
@@ -156,7 +243,6 @@ def get_pointcloud_map(pointcloud_msg, image_height, image_width):
     #cv2.waitKey(5000)
 
     return points
-
 
 def pointcloud_to_image(xyz, rgb, image_height, image_width):
     """
